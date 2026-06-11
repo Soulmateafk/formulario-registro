@@ -410,8 +410,7 @@
       const data = Object.fromEntries(formData.entries());
 
       // --- PASO CLAVE CORREGIDO ---
-      // Forzamos de forma explícita que la propiedad 'cliente' lleve el valor correcto en el JSON final
-      // Si quieres que guarde "Exito Cali" (el texto), cámbialo por: data.cliente = searchInput.value;
+      // Forzamos de forma explícita que la propiedad 'cliente' lleve el nombre de texto seleccionado
       data.cliente = searchInput.value;
 
       const ahora = new Date();
