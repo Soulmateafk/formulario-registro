@@ -34,7 +34,7 @@
       width: 100%;
       max-width: 650px;
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 18px;
       border-top: 6px solid var(--primary-color);
     }
@@ -56,13 +56,17 @@
       grid-column: 1 / -1;
     }
 
+    .form-group.cliente-group {
+      grid-column: 1 / -1;
+    }
+
     label {
       font-weight: 600;
       margin-bottom: 6px;
       font-size: 14px;
     }
 
-    input, textarea {
+    input, textarea, select {
       width: 100%;
       padding: 10px 12px;
       border: 1px solid var(--border-color);
@@ -70,9 +74,10 @@
       box-sizing: border-box;
       font-size: 15px;
       transition: border-color 0.3s, box-shadow 0.3s;
+      background-color: #fff;
     }
 
-    input:focus, textarea:focus {
+    input:focus, textarea:focus, select:focus {
       outline: none;
       border-color: var(--primary-color);
       box-shadow: 0 0 0 3px rgba(94, 53, 177, 0.15);
@@ -107,18 +112,6 @@
       margin-top: 4px;
     }
 
-    form {
-  /* ... tu código anterior ... */
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 18px;
-}
-
-    .form-group:nth-child(2) {
-  grid-column: 1 / -1; /* Esto hará que "Cliente" ocupe todo el ancho si lo prefieres */
-}
-
-    /* Diseño responsivo para pantallas móviles */
     @media (max-width: 600px) {
       form {
         grid-template-columns: 1fr;
@@ -131,9 +124,27 @@
   <form id="registroForm">
     <h2>Registro de Operaciones</h2>
 
-    <div class="form-group">
+    <div class="form-group cliente-group">
       <label>Cliente:</label>
-      <input type="text" name="cliente" required>
+      <select name="cliente" required>
+        <option value="" disabled selected>Seleccione un cliente...</option>
+        <!-- Puedes duplicar esta línea para añadir más clientes si lo requieres -->
+        <option value="Cliente 1">Exito Cali</option>
+        <option value="Cliente 2">D1 Cali</option>
+        <option value="Cliente 3">D1 Eje Cafetero</option>
+        <option value="Cliente 4">Exito Medellin</option>
+        <option value="Cliente 5">D1 Girardota</option>
+        <option value="Cliente 6">D1 Guarne</option>
+        <option value="Cliente 7">D1 La Estrella</option>
+        <option value="Cliente 8">Ara Barranquilla</option>
+        <option value="Cliente 9">D1 Barranquilla</option>
+        <option value="Cliente 10">Exito Barranquilla</option>
+        <option value="Cliente 11">Ara Monteria</option>
+        <option value="Cliente 12">D1 Monteria</option>
+        <option value="Cliente 13">Ara Valledupar</option>
+        <option value="Cliente 14">D1 Ibague</option>  
+        <option value="Cliente 15">Ara Cartagena</option>
+      </select>
     </div>
 
     <div class="form-group">
@@ -174,21 +185,14 @@
     </div>
 
     <div class="form-group">
-      <label>Cantidad de unidad:</label>
-      <input type="number" name="cantidad_unidad" min="0" required>
-      <small>Solo valores numéricos</small>
-    </div>
-
-    <div class="form-group">
-      <label>Cantidad de cajas:</label>
-      <input type="number" name="cantidad_cajas" min="0" required>
-      <small>Solo valores numéricos</small>
-    </div>
-
-    <div class="form-group">
-      <label>Cantidad de canastillas:</label>
-      <input type="number" name="cantidad_canastillas" min="0" required>
-      <small>Solo valores numéricos</small>
+      <label>Unidad de medida base:</label>
+      <select name="unidad_medida_base" required>
+        <option value="" disabled selected>Seleccione una unidad...</option>
+        <option value="unidad">Unidad</option>
+        <option value="canastilla">Canastilla</option>
+        <option value="caja">Caja</option>
+        <option value="otro">otro</option>
+      </select>
     </div>
 
     <div class="form-group full-width">
@@ -211,12 +215,10 @@
       const formData = new FormData(this);
       const data = Object.fromEntries(formData.entries());
 
-      // Añadir fecha y hora automática del envío
       const ahora = new Date();
       data.fecha_envio = ahora.toLocaleDateString();
       data.hora_envio = ahora.toLocaleTimeString();
 
-      // Desactivar el botón para evitar envíos dobles
       const btnSubmit = this.querySelector('button[type="submit"]');
       btnSubmit.disabled = true;
       btnSubmit.innerText = "Guardando...";
@@ -233,11 +235,9 @@
       } catch (error) {
         alert("Ocurrió un error al guardar. Intenta nuevamente.");
       } finally {
-        // Restaurar el estado del bot
         btnSubmit.disabled = false;
         btnSubmit.innerText = "Guardar Registro";
       }
-
     });
   </script>
 </body>
