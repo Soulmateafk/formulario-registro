@@ -56,8 +56,55 @@
       grid-column: 1 / -1;
     }
 
+    /* Estilos específicos para el nuevo buscador de clientes flotante */
     .form-group.cliente-group {
       grid-column: 1 / -1;
+      position: relative;
+    }
+
+    .custom-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      max-height: 230px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      margin-top: 4px;
+    }
+
+    .dropdown-header {
+      background: #f1eff7;
+      padding: 6px 12px;
+      font-weight: 700;
+      font-size: 11px;
+      color: var(--primary-color);
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #e1dde6;
+    }
+
+    .dropdown-item {
+      padding: 10px 12px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.2s;
+    }
+
+    .dropdown-item:hover {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .no-results {
+      padding: 12px;
+      color: #777;
+      font-style: italic;
+      text-align: center;
+      font-size: 14px;
     }
 
     label {
@@ -126,25 +173,9 @@
 
     <div class="form-group cliente-group">
       <label>Cliente:</label>
-      <select name="cliente" required>
-        <option value="" disabled selected>Seleccione un cliente...</option>
-        <!-- Puedes duplicar esta línea para añadir más clientes si lo requieres -->
-        <option value="Cliente 1">Exito Cali</option>
-        <option value="Cliente 2">D1 Cali</option>
-        <option value="Cliente 3">D1 Eje Cafetero</option>
-        <option value="Cliente 4">Exito Medellin</option>
-        <option value="Cliente 5">D1 Girardota</option>
-        <option value="Cliente 6">D1 Guarne</option>
-        <option value="Cliente 7">D1 La Estrella</option>
-        <option value="Cliente 8">Ara Barranquilla</option>
-        <option value="Cliente 9">D1 Barranquilla</option>
-        <option value="Cliente 10">Exito Barranquilla</option>
-        <option value="Cliente 11">Ara Monteria</option>
-        <option value="Cliente 12">D1 Monteria</option>
-        <option value="Cliente 13">Ara Valledupar</option>
-        <option value="Cliente 14">D1 Ibague</option>  
-        <option value="Cliente 15">Ara Cartagena</option>
-      </select>
+      <input type="text" id="searchCliente" placeholder="Seleccione o busque un cliente..." autocomplete="off" required>
+      <div id="clienteDropdown" class="custom-dropdown" style="display: none;"></div>
+      <input type="hidden" name="cliente" id="clienteValue" required>
     </div>
 
     <div class="form-group">
@@ -204,6 +235,162 @@
   </form>
 
   <script>
+    // Base de datos de los clientes mapeados con su tipo y nombre original
+    const clientesData = [
+      { id: "Cliente 1", name: "Exito Cali", type: "viajero" },
+      { id: "Cliente 2", name: "D1 Cali", type: "viajero" },
+      { id: "Cliente 3", name: "D1 Eje Cafetero", type: "viajero" },
+      { id: "Cliente 4", name: "Exito Medellin", type: "viajero" },
+      { id: "Cliente 5", name: "D1 Girardota", type: "viajero" },
+      { id: "Cliente 6", name: "D1 Guarne", type: "viajero" },
+      { id: "Cliente 7", name: "D1 La Estrella", type: "viajero" },
+      { id: "Cliente 8", name: "Ara Barranquilla", type: "viajero" },
+      { id: "Cliente 9", name: "D1 Barranquilla", type: "viajero" },
+      { id: "Cliente 10", name: "Exito Barranquilla", type: "viajero" },
+      { id: "Cliente 11", name: "Ara Monteria", type: "viajero" },
+      { id: "Cliente 12", name: "D1 Monteria", type: "viajero" },
+      { id: "Cliente 13", name: "Ara Valledupar", type: "viajero" },
+      { id: "Cliente 14", name: "D1 Ibague", type: "viajero" },
+      { id: "Cliente 15", name: "Ara Cartagena", type: "viajero" },
+////----------------------------------------------------------------------
+      { id: "Cliente 16", name: "Alkosto", type: "directo" },
+      { id: "Cliente 17", name: "Ara Cota", type: "directo" },
+      { id: "Cliente 18", name: "Ara Gachancipa", type: "directo" },
+      { id: "Cliente 19", name: "CARULLA ALHAMBRA", type: "directo" },
+      { id: "Cliente 20", name: "CARULLA CALLE 102", type: "directo" },
+      { id: "Cliente 21", name: "CARULLA CALLE 140", type: "directo" },
+      { id: "Cliente 22", name: "CARULLA CALLE 63", type: "directo" },
+      { id: "Cliente 23", name: "CARULLA CEDRO BOLIVAR", type: "directo" },
+      { id: "Cliente 24", name: "CARULLA CENTRO CHIA", type: "directo" },
+      { id: "Cliente 25", name: "CARULLA COUNTRY", type: "directo" },
+      { id: "Cliente 26", name: "CARULLA GALERIAS", type: "directo" },
+      { id: "Cliente 27", name: "CARULLA NIZA", type: "directo" },
+      { id: "Cliente 28", name: "CARULLA PEPE SIERRA", type: "directo" },
+      { id: "Cliente 29", name: "CARULLA PLAZA CLARO", type: "directo" },
+      { id: "Cliente 30", name: "CARULLA QUINTA CAMACHO", type: "directo" },
+      { id: "Cliente 31", name: "CARULLA RETIRO", type: "directo" },
+      { id: "Cliente 32", name: "CARULLA RINCON COLINA", type: "directo" },
+      { id: "Cliente 33", name: "CARULLA ROSALES", type: "directo" },
+      { id: "Cliente 34", name: "CARULLA SANTA BARBARA", type: "directo" },
+      { id: "Cliente 35", name: "CARULLA SMART", type: "directo" },
+      { id: "Cliente 36", name: "D1  K2 - FUNZA", type: "directo" },
+      { id: "Cliente 37", name: "D1 K1 FUNZA", type: "directo" },
+      { id: "Cliente 38", name: "D1 SIBATE -", type: "directo" },
+      { id: "Cliente 39", name: "D1 TOCANCIPA", type: "directo" },
+      { id: "Cliente 40", name: "D1 SUBA", type: "directo" },
+      { id: "Cliente 41", name: "ÉXITO CALLE 80", type: "directo" },
+      { id: "Cliente 42", name: "D1 USME", type: "directo" },
+      { id: "Cliente 43", name: "EXITO CHAPINERO", type: "directo" },
+      { id: "Cliente 44", name: "ÉXITO COLINA", type: "directo" },
+      { id: "Cliente 45", name: "EXITO COUNTRY", type: "directo" },
+      { id: "Cliente 46", name: "ÉXITO FLORESTA", type: "directo" },
+      { id: "Cliente 47", name: "ÉXITO FONTANAR", type: "directo" },
+      { id: "Cliente 48", name: "EXITO GRAN ESTACION", type: "directo" },
+      { id: "Cliente 49", name: "ÉXITO NIZA", type: "directo" },
+      { id: "Cliente 50", name: "EXITO NORTE", type: "directo" },
+      { id: "Cliente 51", name: "ÉXITO PLAZA SALITRE", type: "directo" },
+      { id: "Cliente 52", name: "ÉXITO UNICENTRO", type: "directo" },
+      { id: "Cliente 53", name: "JUMBO CHIA SABANA", type: "directo" },
+      { id: "Cliente 54", name: "JUMBO SANTA ANA", type: "directo" },
+      { id: "Cliente 55", name: "OLIMPICA", type: "directo" },
+      { id: "Cliente 56", name: "PLATAFORMA CENCOSUD", type: "directo" },
+      { id: "Cliente 57", name: "PLATAFORMA SIBERIA", type: "directo" }
+    ];
+
+    const searchInput = document.getElementById('searchCliente');
+    const dropdown = document.getElementById('clienteDropdown');
+    const hiddenInput = document.getElementById('clienteValue');
+
+    // Función para renderizar y clasificar los datos de la lista flotante
+    function renderList(filterText = '') {
+      dropdown.innerHTML = '';
+      const searchLog = filterText.toLowerCase();
+
+      // Filtrar el array global según lo escrito en tiempo real
+      const filtered = clientesData.filter(c => c.name.toLowerCase().includes(searchLog));
+
+      if (filtered.length === 0) {
+        dropdown.innerHTML = '<div class="no-results">No se encontraron resultados</div>';
+        return;
+      }
+
+      const viajeros = filtered.filter(c => c.type === 'viajero');
+      const directos = filtered.filter(c => c.type === 'directo');
+
+      // --- INSERCIÓN GRUPO VIAJEROS ---
+      if (viajeros.length > 0) {
+        dropdown.appendChild(createHeader('VIAJERO'));
+
+        let subHeaderAgregado = false;
+
+        viajeros.forEach((cliente) => {
+          const numeroCliente = parseInt(cliente.id.replace('Cliente ', ''));
+
+          // Si pasamos del Cliente 15, inyectamos el separador intermedio
+          if (numeroCliente >= 16 && !subHeaderAgregado) {
+            dropdown.appendChild(createHeader('VIAJEROS (MÁS PLACAS)'));
+            subHeaderAgregado = true;
+          }
+
+          dropdown.appendChild(createOptionRow(cliente));
+        });
+      }
+
+      // --- INSERCIÓN GRUPO DIRECTOS ---
+      if (directos.length > 0) {
+        dropdown.appendChild(createHeader('DIRECTOS'));
+        directos.forEach(cliente => {
+          dropdown.appendChild(createOptionRow(cliente));
+        });
+      }
+    }
+
+    function createHeader(text) {
+      const header = document.createElement('div');
+      header.className = 'dropdown-header';
+      header.innerText = text;
+      return header;
+    }
+
+    function createOptionRow(cliente) {
+      const row = document.createElement('div');
+      row.className = 'dropdown-item';
+      row.innerText = cliente.name;
+      
+      row.addEventListener('click', () => {
+        searchInput.value = cliente.name;   // Muestra el nombre visible al usuario
+        hiddenInput.value = cliente.id;     // Escribe el ID en el input oculto (Cliente X)
+        dropdown.style.display = 'none';    // Cierra el panel flotante
+        searchInput.setCustomValidity("");  // Limpia errores de validación si existían
+      });
+      return row;
+    }
+
+    // Eventos de control sobre el buscador
+    searchInput.addEventListener('focus', () => {
+      renderList(searchInput.value);
+      dropdown.style.display = 'block';
+    });
+
+    searchInput.addEventListener('input', (e) => {
+      renderList(e.target.value);
+      // Forzar que el usuario seleccione una opción válida de la lista obligatoriamente
+      hiddenInput.value = "";
+      searchInput.setCustomValidity("Debes seleccionar un cliente válido de la lista.");
+    });
+
+    // Cerrar el dropdown si se hace clic fuera del contenedor
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.cliente-group')) {
+        dropdown.style.display = 'none';
+        // Si no seleccionó un cliente de la lista válida, vaciamos el buscador
+        if (!hiddenInput.value) {
+          searchInput.value = "";
+        }
+      }
+    });
+
+    // Envío del formulario original hacia tu Web App de Google Apps Script
     document.getElementById("registroForm").addEventListener("submit", async function(e) {
       e.preventDefault();
       
@@ -232,6 +419,7 @@
 
         alert("Registro guardado en Google Sheets con éxito.");
         this.reset();
+        hiddenInput.value = ""; // Resetea el control del input oculto
       } catch (error) {
         alert("Ocurrió un error al guardar. Intenta nuevamente.");
       } finally {
