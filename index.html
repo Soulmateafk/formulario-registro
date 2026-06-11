@@ -2,62 +2,117 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registro de Operaciones</title>
   <style>
+    :root {
+      --primary-color: #5e35b1; /* Tono morado corporativo */
+      --primary-hover: #4527a0;
+      --bg-color: #f4f3f9;
+      --text-color: #333;
+      --border-color: #ccc;
+    }
+    
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f9;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
     }
+
     form {
       background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      width: 600px;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 650px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 15px;
+      gap: 18px;
+      border-top: 6px solid var(--primary-color);
     }
+
     h2 {
-      grid-column: span 2;
+      grid-column: 1 / -1;
       text-align: center;
+      margin-top: 0;
       margin-bottom: 10px;
+      color: var(--primary-color);
     }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
     label {
-      font-weight: bold;
-      display: block;
-      margin-bottom: 5px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 14px;
     }
+
     input, textarea {
       width: 100%;
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 15px;
+      transition: border-color 0.3s, box-shadow 0.3s;
     }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(94, 53, 177, 0.15);
+    }
+
     textarea {
       resize: vertical;
-      min-height: 60px;
+      min-height: 80px;
     }
+
     button {
-      grid-column: span 2;
-      padding: 10px;
-      background: #4CAF50;
+      grid-column: 1 / -1;
+      padding: 14px;
+      background: var(--primary-color);
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
       cursor: pointer;
       font-size: 16px;
+      font-weight: bold;
+      transition: background 0.3s;
+      margin-top: 10px;
     }
+
     button:hover {
-      background: #45a049;
+      background: var(--primary-hover);
     }
+
     small {
       font-size: 12px;
       color: #666;
+      margin-top: 4px;
+    }
+
+    /* Diseño responsivo para pantallas móviles */
+    @media (max-width: 600px) {
+      form {
+        grid-template-columns: 1fr;
+        padding: 20px;
+      }
     }
   </style>
 </head>
@@ -65,57 +120,78 @@
   <form id="registroForm">
     <h2>Registro de Operaciones</h2>
 
-    <div>
+    <div class="form-group">
       <label>Hora de radicación:</label>
       <input type="time" name="hora_radicacion" required>
     </div>
 
-    <div>
+    <div class="form-group">
       <label>Hora de ingreso a muelle:</label>
       <input type="time" name="hora_ingreso" required>
     </div>
 
-    <div>
+    <div class="form-group">
       <label>Hora de salida de muelle:</label>
       <input type="time" name="hora_salida" required>
     </div>
 
-    <div>
+    <div class="form-group">
       <label>Hora de facturación:</label>
       <input type="time" name="hora_facturacion" required>
     </div>
 
-    <div>
-      <label>Producto de devolución:</label>
-      <input type="text" name="producto_devolucion" required>
-    </div>
-
-    <div>
-      <label>Cantidad de devolución:</label>
-      <input type="number" name="cantidad_devolucion" min="1" required>
-    </div>
-
-    <div>
-      <label>Motivo devolución:</label>
-      <textarea name="motivo_devolucion" required></textarea>
-    </div>
-
-    <div>
-      <label>Placa:</label>
+    <div class="form-group">
+      <label>Placa del vehículo:</label>
       <input type="text" name="placa" pattern="[A-Za-z]{3}[0-9]{3}" required>
       <small>Formato: ABC123</small>
     </div>
 
-    <button type="submit">Guardar</button>
+    <div class="form-group">
+      <label>Producto de devolución:</label>
+      <input type="text" name="producto_devolucion" required>
+    </div>
+
+    <div class="form-group">
+      <label>Cantidad total de devolución:</label>
+      <input type="number" name="cantidad_devolucion" min="1" required>
+      <small>Solo valores numéricos</small>
+    </div>
+
+    <div class="form-group">
+      <label>Cantidad de unidad:</label>
+      <input type="number" name="cantidad_unidad" min="0" required>
+      <small>Solo valores numéricos</small>
+    </div>
+
+    <div class="form-group">
+      <label>Cantidad de cajas:</label>
+      <input type="number" name="cantidad_cajas" min="0" required>
+      <small>Solo valores numéricos</small>
+    </div>
+
+    <div class="form-group">
+      <label>Cantidad de canastillas:</label>
+      <input type="number" name="cantidad_canastillas" min="0" required>
+      <small>Solo valores numéricos</small>
+    </div>
+
+    <div class="form-group full-width">
+      <label>Motivo devolución:</label>
+      <textarea name="motivo_devolucion" required></textarea>
+    </div>
+
+    <button type="submit">Guardar Registro</button>
   </form>
 
   <script>
     document.getElementById("registroForm").addEventListener("submit", async function(e) {
       e.preventDefault();
+      
       if (!this.checkValidity()) {
         alert("Por favor completa todos los campos correctamente.");
         return;
       }
+      
       const formData = new FormData(this);
       const data = Object.fromEntries(formData.entries());
 
@@ -124,14 +200,27 @@
       data.fecha_envio = ahora.toLocaleDateString();
       data.hora_envio = ahora.toLocaleTimeString();
 
-      await fetch("https://script.google.com/macros/s/AKfycbz54I5mNN-iJacYWL9FRMqo9Ep422xj9hsiDc4765gdO6Ci6Tzs2nVkC-pjki0R8FmB/exec", {
-      method: "POST",
-      mode: "no-cors",
-      body: JSON.stringify(data)
-    });
+      // Desactivar el botón para evitar envíos dobles
+      const btnSubmit = this.querySelector('button[type="submit"]');
+      btnSubmit.disabled = true;
+      btnSubmit.innerText = "Guardando...";
 
-      alert("Registro guardado en Google Sheets");
-      this.reset();
+      try {
+        await fetch("https://script.google.com/macros/s/AKfycbz54I5mNN-iJacYWL9FRMqo9Ep422xj9hsiDc4765gdO6Ci6Tzs2nVkC-pjki0R8FmB/exec", {
+          method: "POST",
+          mode: "no-cors",
+          body: JSON.stringify(data)
+        });
+
+        alert("Registro guardado en Google Sheets con éxito.");
+        this.reset();
+      } catch (error) {
+        alert("Ocurrió un error al guardar. Intenta nuevamente.");
+      } finally {
+        // Restaurar el estado del botón
+        btnSubmit.disabled = false;
+        btnSubmit.innerText = "Guardar Registro";
+      }
     });
   </script>
 </body>
