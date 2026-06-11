@@ -390,9 +390,16 @@
       }
     });
 
-    // Envío del formulario original hacia tu Web App de Google Apps Script
+    // Envío del formulario corregido hacia tu Web App de Google Apps Script
     document.getElementById("registroForm").addEventListener("submit", async function(e) {
       e.preventDefault();
+      
+      // Validación preventiva: verificar si efectivamente hay un cliente asignado en el campo oculto
+      if (!hiddenInput.value) {
+        alert("Debes seleccionar un cliente válido de la lista flotante.");
+        searchInput.focus();
+        return;
+      }
       
       if (!this.checkValidity()) {
         alert("Por favor completa todos los campos correctamente.");
@@ -401,6 +408,11 @@
       
       const formData = new FormData(this);
       const data = Object.fromEntries(formData.entries());
+
+      // --- PASO CLAVE CORREGIDO ---
+      // Forzamos de forma explícita que la propiedad 'cliente' lleve el valor correcto en el JSON final
+      // Si quieres que guarde "Exito Cali" (el texto), cámbialo por: data.cliente = searchInput.value;
+      data.cliente = searchInput.value;
 
       const ahora = new Date();
       data.fecha_envio = ahora.toLocaleDateString();
