@@ -59,7 +59,6 @@
 
     /* Campos con buscador flotante (cliente, tienda, sucursal, dependencia, placa) */
     .searchable-group {
-      grid-column: 1 / -1;
       position: relative;
     }
 
@@ -197,21 +196,21 @@
       <input type="hidden" name="cliente" id="valueCliente" required>
     </div>
 
-    <div class="form-group searchable-group" id="grupoTienda">
+    <div class="form-group searchable-group" id="grupoTienda" style="display:none;">
       <label>Tienda:</label>
       <input type="text" id="searchTienda" placeholder="Seleccione primero un cliente..." autocomplete="off" required disabled>
       <div id="dropdownTienda" class="custom-dropdown"></div>
       <input type="hidden" name="tienda" id="valueTienda" required>
     </div>
 
-    <div class="form-group searchable-group" id="grupoSucursal">
+    <div class="form-group searchable-group" id="grupoSucursal" style="display:none;">
       <label>Sucursal:</label>
       <input type="text" id="searchSucursal" placeholder="Seleccione primero una tienda..." autocomplete="off" required disabled>
       <div id="dropdownSucursal" class="custom-dropdown"></div>
       <input type="hidden" name="sucursal" id="valueSucursal" required>
     </div>
 
-    <div class="form-group searchable-group" id="grupoDependencia">
+    <div class="form-group searchable-group" id="grupoDependencia" style="display:none;">
       <label>Dependencia:</label>
       <input type="text" id="searchDependencia" placeholder="Seleccione primero una sucursal..." autocomplete="off" required disabled>
       <div id="dropdownDependencia" class="custom-dropdown"></div>
@@ -248,7 +247,7 @@
       <input type="time" name="hora_recoleccion_cajas" required>
     </div>
 
-    <div class="form-group searchable-group" id="grupoPlaca">
+    <div class="form-group searchable-group full-width" id="grupoPlaca" style="display:none;">
       <label>Placa del vehículo:</label>
       <input type="text" id="searchPlaca" placeholder="Seleccione primero cliente/tienda/sucursal/dependencia..." autocomplete="off" required disabled>
       <div id="dropdownPlaca" class="custom-dropdown"></div>
@@ -504,6 +503,7 @@
       return {
         setEnabled(enabled, placeholderText) {
           input.disabled = !enabled;
+          group.style.display = enabled ? '' : 'none';
           if (placeholderText) input.placeholder = placeholderText;
           if (!enabled) {
             input.value = '';
