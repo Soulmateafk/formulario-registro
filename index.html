@@ -6,12 +6,16 @@
   <title>Registro de Operaciones</title>
   <style>
     :root {
-      --primary-color: #5e35b1; /* Tono morado corporativo */
-      --primary-hover: #4527a0;
-      --bg-color: #f4f3f9;
-      --text-color: #1a1a1a;
-      --border-color: #999;
-      --disabled-bg: #ececec;
+      --primary-color: #3b82f6; /* Azul confirmado del logo Rutograma/Makand */
+      --primary-hover: #306ac9; /* Mismo azul, más oscuro para hover */
+      --accent-color: #fb923c; /* Naranja confirmado de la barra superior/puntos del login */
+      --bg-color: #121b2e;      /* Fondo oscuro exacto de la app Rutograma */
+      --panel-color: #172846;   /* Tono del recuadro del ícono en el login */
+      --input-bg: #0c1424;      /* Fondo de los inputs, tomado del login */
+      --border-color: #2c3a56;
+      --text-color: #e2e8f0;
+      --muted-color: #94a3b8;
+      --disabled-bg: #1e293b;
     }
 
     body {
@@ -28,16 +32,83 @@
     }
 
     form {
-      background: #fff;
+      position: relative;
+      background: var(--panel-color);
       padding: 30px;
       border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.06);
       width: 100%;
       max-width: 700px;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 18px;
-      border-top: 6px solid var(--primary-color);
+    }
+
+    form::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 6px;
+      border-radius: 12px 12px 0 0;
+      background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    }
+
+    .logo-dots {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .logo-dots span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--primary-color);
+    }
+
+    .logo-dots span:nth-child(2) {
+      background: var(--accent-color);
+    }
+
+    .logo-header {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .logo-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: var(--input-bg);
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .logo-text {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    .logo-text .maka { color: var(--text-color); }
+    .logo-text .nd { color: var(--primary-color); }
+
+    .logo-sub {
+      font-size: 12px;
+      color: var(--muted-color);
+      margin-bottom: 6px;
     }
 
     h2 {
@@ -45,7 +116,7 @@
       text-align: center;
       margin-top: 0;
       margin-bottom: 10px;
-      color: var(--primary-color);
+      color: var(--text-color);
     }
 
     .form-group {
@@ -69,29 +140,36 @@
       right: 0;
       max-height: 230px;
       overflow-y: auto;
-      background: #fff;
+      background: var(--panel-color);
       border: 1px solid var(--border-color);
       border-radius: 6px;
       z-index: 1000;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
       margin-top: 4px;
       display: none;
     }
 
     .dropdown-header {
-      background: #f1eff7;
+      background: rgba(59, 130, 246, 0.12);
       padding: 6px 12px;
       font-weight: 700;
       font-size: 11px;
       color: var(--primary-color);
       letter-spacing: 0.5px;
-      border-bottom: 1px solid #e1dde6;
+      border-bottom: 1px solid rgba(59, 130, 246, 0.25);
+    }
+
+    .dropdown-header.header-viajero {
+      color: var(--accent-color);
+      background: rgba(251, 146, 60, 0.12);
+      border-bottom-color: rgba(251, 146, 60, 0.25);
     }
 
     .dropdown-item {
       padding: 10px 12px;
       cursor: pointer;
       font-size: 14px;
+      color: var(--text-color);
       transition: background-color 0.2s;
     }
 
@@ -102,7 +180,7 @@
 
     .no-results {
       padding: 12px;
-      color: #777;
+      color: var(--muted-color);
       font-style: italic;
       text-align: center;
       font-size: 14px;
@@ -112,7 +190,7 @@
       font-weight: 700;
       margin-bottom: 6px;
       font-size: 14px;
-      color: #1a1a1a;
+      color: var(--text-color);
     }
 
     input, textarea, select {
@@ -123,27 +201,37 @@
       box-sizing: border-box;
       font-size: 15px;
       font-weight: 500;
-      color: #1a1a1a;
+      color: var(--text-color);
       transition: border-color 0.3s, box-shadow 0.3s;
-      background-color: #fff;
+      background-color: var(--input-bg);
+    }
+
+    ::placeholder {
+      color: var(--muted-color);
+      opacity: 1;
     }
 
     input:focus, textarea:focus, select:focus {
       outline: none;
       border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(94, 53, 177, 0.15);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
     }
 
     input:disabled {
       background-color: var(--disabled-bg);
-      color: #999;
+      color: var(--muted-color);
       cursor: not-allowed;
     }
 
     input[readonly] {
-      background-color: #f1eff7;
+      background-color: rgba(59, 130, 246, 0.15);
       font-weight: 600;
-      color: var(--primary-color);
+      color: #93c0ff;
+    }
+
+    input[readonly].tipo-viajero {
+      background-color: rgba(251, 146, 60, 0.15);
+      color: var(--accent-color);
     }
 
     textarea {
@@ -151,32 +239,38 @@
       min-height: 80px;
     }
 
+    select option {
+      background: var(--panel-color);
+      color: var(--text-color);
+    }
+
     button {
       grid-column: 1 / -1;
       padding: 14px;
-      background: var(--primary-color);
+      background: linear-gradient(90deg, var(--primary-hover), #b4692b);
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       font-size: 16px;
       font-weight: bold;
-      transition: background 0.3s;
+      transition: filter 0.3s;
       margin-top: 10px;
     }
 
     button:hover {
-      background: var(--primary-hover);
+      filter: brightness(1.12);
     }
 
     button:disabled {
-      background: #b3a6d9;
+      background: #334155;
+      color: var(--muted-color);
       cursor: not-allowed;
     }
 
     small {
       font-size: 12px;
-      color: #555;
+      color: var(--muted-color);
       margin-top: 4px;
     }
 
@@ -190,6 +284,20 @@
 </head>
 <body>
   <form id="registroForm">
+    <div class="logo-header">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 7a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v9H5a2 2 0 0 1-2-2V7Z" stroke="#3b82f6" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M15 10h3.2a1 1 0 0 1 .8.4l2 2.6a1 1 0 0 1 .2.6V16h-6v-6Z" stroke="#3b82f6" stroke-width="1.8" stroke-linejoin="round"/>
+          <circle cx="8" cy="17.5" r="1.6" stroke="#3b82f6" stroke-width="1.8"/>
+          <circle cx="18" cy="17.5" r="1.6" stroke="#3b82f6" stroke-width="1.8"/>
+        </svg>
+      </div>
+      <div class="logo-text"><span class="maka">MAKA</span><span class="nd">ND</span></div>
+      <div class="logo-sub">Logística de transporte</div>
+      <div class="logo-dots"><span></span><span></span><span></span></div>
+    </div>
+
     <h2>Registro de Operaciones</h2>
 
     <div class="form-group searchable-group" id="grupoCliente">
@@ -477,7 +585,7 @@
             if (filtered.length === 0) return;
             totalShown += filtered.length;
             const header = document.createElement('div');
-            header.className = 'dropdown-header';
+            header.className = 'dropdown-header' + (grp.colorClass ? ' ' + grp.colorClass : '');
             header.innerText = grp.header;
             dropdown.appendChild(header);
             filtered.sort((a, b) => a.localeCompare(b)).forEach(opt => {
@@ -569,11 +677,16 @@
 
     const tipoInput = document.getElementById('valueTipo');
 
+    function setTipo(valor) {
+      tipoInput.value = valor;
+      tipoInput.classList.toggle('tipo-viajero', valor === 'VIAJERO');
+    }
+
     const placaCtrl = setupSearchable({
       inputId: 'searchPlaca', hiddenId: 'valuePlaca', dropdownId: 'dropdownPlaca', groupId: 'grupoPlaca',
       getGroups: () => [
         { header: 'URBANO', items: placasPorTipo.URBANO },
-        { header: 'VIAJERO', items: placasPorTipo.VIAJERO }
+        { header: 'VIAJERO', items: placasPorTipo.VIAJERO, colorClass: 'header-viajero' }
       ]
     });
 
@@ -591,12 +704,12 @@
       onSelect: (val) => {
         const deps = dataClientes[state.cliente][state.tienda][state.sucursal];
         const found = deps.find(d => d.dep === val);
-        tipoInput.value = found ? found.tipo : '';
+        setTipo(found ? found.tipo : '');
         placaCtrl.clearOnly();
         placaCtrl.setEnabled(true, 'Busque una placa...');
       },
       onClear: () => {
-        tipoInput.value = '';
+        setTipo('');
         placaCtrl.setEnabled(false, 'Seleccione primero cliente/tienda/sucursal/dependencia...');
       }
     });
@@ -610,7 +723,7 @@
       onSelect: (val) => {
         state.sucursal = val;
         dependenciaCtrl.clearOnly();
-        tipoInput.value = '';
+        setTipo('');
         placaCtrl.setEnabled(false, 'Seleccione primero cliente/tienda/sucursal/dependencia...');
 
         const deps = dataClientes[state.cliente][state.tienda][val];
@@ -618,7 +731,7 @@
           // Única dependencia posible: se autocompleta para agilizar el registro
           dependenciaCtrl.setValue(deps[0].dep);
           dependenciaCtrl.setEnabled(true);
-          tipoInput.value = deps[0].tipo;
+          setTipo(deps[0].tipo);
           placaCtrl.clearOnly();
           placaCtrl.setEnabled(true, 'Busque una placa...');
         } else {
@@ -628,7 +741,7 @@
       onClear: () => {
         state.sucursal = null;
         dependenciaCtrl.setEnabled(false, 'Seleccione primero una sucursal...');
-        tipoInput.value = '';
+        setTipo('');
         placaCtrl.setEnabled(false, 'Seleccione primero cliente/tienda/sucursal/dependencia...');
       }
     });
@@ -642,7 +755,7 @@
         sucursalCtrl.clearOnly();
         sucursalCtrl.setEnabled(true, 'Seleccione una sucursal...');
         dependenciaCtrl.setEnabled(false, 'Seleccione primero una sucursal...');
-        tipoInput.value = '';
+        setTipo('');
         placaCtrl.setEnabled(false, 'Seleccione primero cliente/tienda/sucursal/dependencia...');
       },
       onClear: () => {
@@ -650,7 +763,7 @@
         state.sucursal = null;
         sucursalCtrl.setEnabled(false, 'Seleccione primero una tienda...');
         dependenciaCtrl.setEnabled(false, 'Seleccione primero una sucursal...');
-        tipoInput.value = '';
+        setTipo('');
         placaCtrl.setEnabled(false, 'Seleccione primero cliente/tienda/sucursal/dependencia...');
       }
     });
@@ -666,7 +779,7 @@
         tiendaCtrl.setEnabled(true, 'Seleccione una tienda...');
         sucursalCtrl.setEnabled(false, 'Seleccione primero una tienda...');
         dependenciaCtrl.setEnabled(false, 'Seleccione primero una sucursal...');
-        tipoInput.value = '';
+        setTipo('');
         placaCtrl.setEnabled(false, 'Seleccione primero cliente/tienda/sucursal/dependencia...');
       },
       onClear: () => {
@@ -676,7 +789,7 @@
         tiendaCtrl.setEnabled(false, 'Seleccione primero un cliente...');
         sucursalCtrl.setEnabled(false, 'Seleccione primero una tienda...');
         dependenciaCtrl.setEnabled(false, 'Seleccione primero una sucursal...');
-        tipoInput.value = '';
+        setTipo('');
         placaCtrl.setEnabled(false, 'Seleccione primero cliente/tienda/sucursal/dependencia...');
       }
     });
@@ -735,7 +848,7 @@
         tiendaCtrl.setEnabled(false, 'Seleccione primero un cliente...');
         sucursalCtrl.setEnabled(false, 'Seleccione primero una tienda...');
         dependenciaCtrl.setEnabled(false, 'Seleccione primero una sucursal...');
-        tipoInput.value = '';
+        setTipo('');
         placaCtrl.setEnabled(false, 'Seleccione primero cliente/tienda/sucursal/dependencia...');
       } catch (error) {
         alert("Ocurrió un error al guardar. Intenta nuevamente.");
