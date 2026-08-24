@@ -257,24 +257,8 @@
 
     <div class="form-group">
       <label>Producto de devolución:</label>
-      <input type="text" name="producto_devolucion" required>
+      <input type="text" name="producto_devolucion" placeholder="Producto unificado" required>
       <small>Por ahora es texto libre (lista pendiente).</small>
-    </div>
-
-    <div class="form-group searchable-group" id="grupoProductoUnificado">
-      <label>Producto unificado:</label>
-      <input type="text" id="searchProductoUnificado" placeholder="Escriba o seleccione un producto..." autocomplete="off">
-      <div id="dropdownProductoUnificado" class="custom-dropdown"></div>
-      <input type="hidden" name="producto_unificado" id="valueProductoUnificado">
-      <small>Lista pendiente de cargar.</small>
-    </div>
-
-    <div class="form-group searchable-group" id="grupoDescripcionItem">
-      <label>Descripción de item:</label>
-      <input type="text" id="searchDescripcionItem" placeholder="Escriba o seleccione una descripción..." autocomplete="off">
-      <div id="dropdownDescripcionItem" class="custom-dropdown"></div>
-      <input type="hidden" name="descripcion_item" id="valueDescripcionItem">
-      <small>Lista pendiente de cargar.</small>
     </div>
 
     <div class="form-group searchable-group" id="grupoCodigoBarras">
@@ -463,9 +447,7 @@
       VIAJERO: ["LUN-428", "LUN-429", "NHR-632", "NOW-031", "NOW-033", "NUX-577", "NUX-579", "NUX-580", "PRZ-064", "PRZ-065", "PRZ-067", "QJZ-765", "QJZ-764", "QTZ-898", "QTZ-899"]
     };
 
-    // Listas pendientes: se llenan cuando el usuario mande los datos.
-    const productosUnificados = [];
-    const descripcionesItem = [];
+    // Lista pendiente: se llena cuando el usuario mande los datos.
     const codigosBarras = [];
 
     // Estado de la selección en curso
@@ -590,16 +572,6 @@
         { header: 'URBANO', items: placasPorTipo.URBANO },
         { header: 'VIAJERO', items: placasPorTipo.VIAJERO }
       ]
-    });
-
-    const productoUnificadoCtrl = setupSearchable({
-      inputId: 'searchProductoUnificado', hiddenId: 'valueProductoUnificado', dropdownId: 'dropdownProductoUnificado', groupId: 'grupoProductoUnificado',
-      getOptions: () => productosUnificados.slice()
-    });
-
-    const descripcionItemCtrl = setupSearchable({
-      inputId: 'searchDescripcionItem', hiddenId: 'valueDescripcionItem', dropdownId: 'dropdownDescripcionItem', groupId: 'grupoDescripcionItem',
-      getOptions: () => descripcionesItem.slice()
     });
 
     const codigoBarrasCtrl = setupSearchable({
