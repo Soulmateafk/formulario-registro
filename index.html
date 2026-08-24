@@ -261,6 +261,30 @@
       <small>Por ahora es texto libre (lista pendiente).</small>
     </div>
 
+    <div class="form-group searchable-group" id="grupoProductoUnificado">
+      <label>Producto unificado:</label>
+      <input type="text" id="searchProductoUnificado" placeholder="Escriba o seleccione un producto..." autocomplete="off">
+      <div id="dropdownProductoUnificado" class="custom-dropdown"></div>
+      <input type="hidden" name="producto_unificado" id="valueProductoUnificado">
+      <small>Lista pendiente de cargar.</small>
+    </div>
+
+    <div class="form-group searchable-group" id="grupoDescripcionItem">
+      <label>Descripción de item:</label>
+      <input type="text" id="searchDescripcionItem" placeholder="Escriba o seleccione una descripción..." autocomplete="off">
+      <div id="dropdownDescripcionItem" class="custom-dropdown"></div>
+      <input type="hidden" name="descripcion_item" id="valueDescripcionItem">
+      <small>Lista pendiente de cargar.</small>
+    </div>
+
+    <div class="form-group searchable-group" id="grupoCodigoBarras">
+      <label>Código de barras:</label>
+      <input type="text" id="searchCodigoBarras" placeholder="Escriba o seleccione un código..." autocomplete="off">
+      <div id="dropdownCodigoBarras" class="custom-dropdown"></div>
+      <input type="hidden" name="codigo_barras" id="valueCodigoBarras">
+      <small>Lista pendiente de cargar.</small>
+    </div>
+
     <div class="form-group">
       <label>Cantidad total de devolución:</label>
       <input type="number" name="cantidad_devolucion" min="1" required>
@@ -433,11 +457,16 @@
       }
     };
 
-    // Placas disponibles, separadas por tipo de viaje.
+    // Placas disponibles, separadas por tipo de viaje (para mostrarlas agrupadas).
     const placasPorTipo = {
       URBANO: ["WCX-460", "WFH-623", "FSW-016", "GZZ-181", "GZZ-182", "JUY-343", "KNM-116", "JVK-792", "NHR-633", "NUX-576", "PRZ-066", "QJY-099", "QJY-850"],
       VIAJERO: ["LUN-428", "LUN-429", "NHR-632", "NOW-031", "NOW-033", "NUX-577", "NUX-579", "NUX-580", "PRZ-064", "PRZ-065", "PRZ-067", "QJZ-765", "QJZ-764", "QTZ-898", "QTZ-899"]
     };
+
+    // Listas pendientes: se llenan cuando el usuario mande los datos.
+    const productosUnificados = [];
+    const descripcionesItem = [];
+    const codigosBarras = [];
 
     // Estado de la selección en curso
     const state = { cliente: null, tienda: null, sucursal: null };
@@ -452,13 +481,45 @@
       const group = document.getElementById(cfg.groupId);
 
       function render(filterText) {
-        const options = cfg.getOptions() || [];
+        const f = (filterText || '').toLowerCase();
         dropdown.innerHTML = '';
+
+        if (cfg.getGroups) {
+          const groups = cfg.getGroups();
+          let totalShown = 0;
+          groups.forEach(grp => {
+            const filtered = (grp.items || []).filter(o => o.toLowerCase().includes(f));
+            if (filtered.length === 0) return;
+            totalShown += filtered.length;
+            const header = document.createElement('div');
+            header.className = 'dropdown-header';
+            header.innerText = grp.header;
+            dropdown.appendChild(header);
+            filtered.sort((a, b) => a.localeCompare(b)).forEach(opt => {
+              const row = document.createElement('div');
+              row.className = 'dropdown-item';
+              row.innerText = opt;
+              row.addEventListener('click', () => {
+                input.value = opt;
+                hidden.value = opt;
+                dropdown.style.display = 'none';
+                input.setCustomValidity('');
+                if (cfg.onSelect) cfg.onSelect(opt);
+              });
+              dropdown.appendChild(row);
+            });
+          });
+          if (totalShown === 0) {
+            dropdown.innerHTML = '<div class="no-results">No se encontraron resultados</div>';
+          }
+          return;
+        }
+
+        const options = cfg.getOptions() || [];
         if (options.length === 0) {
           dropdown.innerHTML = '<div class="no-results">No hay opciones disponibles</div>';
           return;
         }
-        const f = (filterText || '').toLowerCase();
         const filtered = options.filter(o => o.toLowerCase().includes(f));
         if (filtered.length === 0) {
           dropdown.innerHTML = '<div class="no-results">No se encontraron resultados</div>';
@@ -525,10 +586,25 @@
 
     const placaCtrl = setupSearchable({
       inputId: 'searchPlaca', hiddenId: 'valuePlaca', dropdownId: 'dropdownPlaca', groupId: 'grupoPlaca',
-      getOptions: () => {
-        const tipo = tipoInput.value;
-        return (tipo && placasPorTipo[tipo]) ? placasPorTipo[tipo].slice() : [];
-      }
+      getGroups: () => [
+        { header: 'URBANO', items: placasPorTipo.URBANO },
+        { header: 'VIAJERO', items: placasPorTipo.VIAJERO }
+      ]
+    });
+
+    const productoUnificadoCtrl = setupSearchable({
+      inputId: 'searchProductoUnificado', hiddenId: 'valueProductoUnificado', dropdownId: 'dropdownProductoUnificado', groupId: 'grupoProductoUnificado',
+      getOptions: () => productosUnificados.slice()
+    });
+
+    const descripcionItemCtrl = setupSearchable({
+      inputId: 'searchDescripcionItem', hiddenId: 'valueDescripcionItem', dropdownId: 'dropdownDescripcionItem', groupId: 'grupoDescripcionItem',
+      getOptions: () => descripcionesItem.slice()
+    });
+
+    const codigoBarrasCtrl = setupSearchable({
+      inputId: 'searchCodigoBarras', hiddenId: 'valueCodigoBarras', dropdownId: 'dropdownCodigoBarras', groupId: 'grupoCodigoBarras',
+      getOptions: () => codigosBarras.slice()
     });
 
     const dependenciaCtrl = setupSearchable({
