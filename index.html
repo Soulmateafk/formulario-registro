@@ -11,8 +11,9 @@
       --bg-color: #f4f3f9;
       --text-color: #333;
       --border-color: #ccc;
+      --disabled-bg: #ececec;
     }
-    
+
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
       background: var(--bg-color);
@@ -32,7 +33,7 @@
       border-radius: 12px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.08);
       width: 100%;
-      max-width: 650px;
+      max-width: 700px;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 18px;
@@ -56,8 +57,8 @@
       grid-column: 1 / -1;
     }
 
-    /* Estilos específicos para el nuevo buscador de clientes flotante */
-    .form-group.cliente-group {
+    /* Campos con buscador flotante (cliente, tienda, sucursal, dependencia, placa) */
+    .searchable-group {
       grid-column: 1 / -1;
       position: relative;
     }
@@ -75,6 +76,7 @@
       z-index: 1000;
       box-shadow: 0 4px 12px rgba(0,0,0,0.12);
       margin-top: 4px;
+      display: none;
     }
 
     .dropdown-header {
@@ -130,6 +132,18 @@
       box-shadow: 0 0 0 3px rgba(94, 53, 177, 0.15);
     }
 
+    input:disabled {
+      background-color: var(--disabled-bg);
+      color: #999;
+      cursor: not-allowed;
+    }
+
+    input[readonly] {
+      background-color: #f1eff7;
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
     textarea {
       resize: vertical;
       min-height: 80px;
@@ -153,6 +167,11 @@
       background: var(--primary-hover);
     }
 
+    button:disabled {
+      background: #b3a6d9;
+      cursor: not-allowed;
+    }
+
     small {
       font-size: 12px;
       color: #666;
@@ -171,11 +190,37 @@
   <form id="registroForm">
     <h2>Registro de Operaciones</h2>
 
-    <div class="form-group cliente-group">
+    <div class="form-group searchable-group" id="grupoCliente">
       <label>Cliente:</label>
-      <input type="text" id="searchCliente" placeholder="Seleccione o busque un cliente..." autocomplete="off" required>
-      <div id="clienteDropdown" class="custom-dropdown" style="display: none;"></div>
-      <input type="hidden" name="cliente" id="clienteValue" required>
+      <input type="text" id="searchCliente" placeholder="Busque un cliente..." autocomplete="off" required>
+      <div id="dropdownCliente" class="custom-dropdown"></div>
+      <input type="hidden" name="cliente" id="valueCliente" required>
+    </div>
+
+    <div class="form-group searchable-group" id="grupoTienda">
+      <label>Tienda:</label>
+      <input type="text" id="searchTienda" placeholder="Seleccione primero un cliente..." autocomplete="off" required disabled>
+      <div id="dropdownTienda" class="custom-dropdown"></div>
+      <input type="hidden" name="tienda" id="valueTienda" required>
+    </div>
+
+    <div class="form-group searchable-group" id="grupoSucursal">
+      <label>Sucursal:</label>
+      <input type="text" id="searchSucursal" placeholder="Seleccione primero una tienda..." autocomplete="off" required disabled>
+      <div id="dropdownSucursal" class="custom-dropdown"></div>
+      <input type="hidden" name="sucursal" id="valueSucursal" required>
+    </div>
+
+    <div class="form-group searchable-group" id="grupoDependencia">
+      <label>Dependencia:</label>
+      <input type="text" id="searchDependencia" placeholder="Seleccione primero una sucursal..." autocomplete="off" required disabled>
+      <div id="dropdownDependencia" class="custom-dropdown"></div>
+      <input type="hidden" name="dependencia" id="valueDependencia" required>
+    </div>
+
+    <div class="form-group full-width">
+      <label>Tipo de viaje:</label>
+      <input type="text" name="tipo" id="valueTipo" placeholder="Se completa automáticamente" readonly required>
     </div>
 
     <div class="form-group">
@@ -199,14 +244,22 @@
     </div>
 
     <div class="form-group">
+      <label>Hora de recolección de cajas:</label>
+      <input type="time" name="hora_recoleccion_cajas" required>
+    </div>
+
+    <div class="form-group searchable-group" id="grupoPlaca">
       <label>Placa del vehículo:</label>
-      <input type="text" name="placa" pattern="[A-Za-z]{3}[0-9]{3}" required>
-      <small>Formato: ABC123</small>
+      <input type="text" id="searchPlaca" placeholder="Seleccione primero cliente/tienda/sucursal/dependencia..." autocomplete="off" required disabled>
+      <div id="dropdownPlaca" class="custom-dropdown"></div>
+      <input type="hidden" name="placa" id="valuePlaca" required>
+      <small>Escriba para buscar; solo puede elegir una placa de la lista.</small>
     </div>
 
     <div class="form-group">
       <label>Producto de devolución:</label>
       <input type="text" name="producto_devolucion" required>
+      <small>Por ahora es texto libre (lista pendiente).</small>
     </div>
 
     <div class="form-group">
@@ -235,183 +288,378 @@
   </form>
 
   <script>
-    // Base de datos de los clientes mapeados con su tipo y nombre original
-    const clientesData = [
-      { id: "Cliente 1", name: "Exito Cali", type: "viajero" },
-      { id: "Cliente 2", name: "D1 Cali", type: "viajero" },
-      { id: "Cliente 3", name: "D1 Eje Cafetero", type: "viajero" },
-      { id: "Cliente 4", name: "Exito Medellin", type: "viajero" },
-      { id: "Cliente 5", name: "D1 Girardota", type: "viajero" },
-      { id: "Cliente 6", name: "D1 Guarne", type: "viajero" },
-      { id: "Cliente 7", name: "D1 La Estrella", type: "viajero" },
-      { id: "Cliente 8", name: "Ara Barranquilla", type: "viajero" },
-      { id: "Cliente 9", name: "D1 Barranquilla", type: "viajero" },
-      { id: "Cliente 10", name: "Exito Barranquilla", type: "viajero" },
-      { id: "Cliente 11", name: "Ara Monteria", type: "viajero" },
-      { id: "Cliente 12", name: "D1 Monteria", type: "viajero" },
-      { id: "Cliente 13", name: "Ara Valledupar", type: "viajero" },
-      { id: "Cliente 14", name: "D1 Ibague", type: "viajero" },
-      { id: "Cliente 15", name: "Ara Cartagena", type: "viajero" },
-////----------------------------------------------------------------------
-      { id: "Cliente 16", name: "Alkosto", type: "directo" },
-      { id: "Cliente 17", name: "Ara Cota", type: "directo" },
-      { id: "Cliente 18", name: "Ara Gachancipa", type: "directo" },
-      { id: "Cliente 19", name: "CARULLA ALHAMBRA", type: "directo" },
-      { id: "Cliente 20", name: "CARULLA CALLE 102", type: "directo" },
-      { id: "Cliente 21", name: "CARULLA CALLE 140", type: "directo" },
-      { id: "Cliente 22", name: "CARULLA CALLE 63", type: "directo" },
-      { id: "Cliente 23", name: "CARULLA CEDRO BOLIVAR", type: "directo" },
-      { id: "Cliente 24", name: "CARULLA CENTRO CHIA", type: "directo" },
-      { id: "Cliente 25", name: "CARULLA COUNTRY", type: "directo" },
-      { id: "Cliente 26", name: "CARULLA GALERIAS", type: "directo" },
-      { id: "Cliente 27", name: "CARULLA NIZA", type: "directo" },
-      { id: "Cliente 28", name: "CARULLA PEPE SIERRA", type: "directo" },
-      { id: "Cliente 29", name: "CARULLA PLAZA CLARO", type: "directo" },
-      { id: "Cliente 30", name: "CARULLA QUINTA CAMACHO", type: "directo" },
-      { id: "Cliente 31", name: "CARULLA RETIRO", type: "directo" },
-      { id: "Cliente 32", name: "CARULLA RINCON COLINA", type: "directo" },
-      { id: "Cliente 33", name: "CARULLA ROSALES", type: "directo" },
-      { id: "Cliente 34", name: "CARULLA SANTA BARBARA", type: "directo" },
-      { id: "Cliente 35", name: "CARULLA SMART", type: "directo" },
-      { id: "Cliente 36", name: "D1  K2 - FUNZA", type: "directo" },
-      { id: "Cliente 37", name: "D1 K1 FUNZA", type: "directo" },
-      { id: "Cliente 38", name: "D1 SIBATE -", type: "directo" },
-      { id: "Cliente 39", name: "D1 TOCANCIPA", type: "directo" },
-      { id: "Cliente 40", name: "D1 SUBA", type: "directo" },
-      { id: "Cliente 41", name: "ÉXITO CALLE 80", type: "directo" },
-      { id: "Cliente 42", name: "D1 USME", type: "directo" },
-      { id: "Cliente 43", name: "EXITO CHAPINERO", type: "directo" },
-      { id: "Cliente 44", name: "ÉXITO COLINA", type: "directo" },
-      { id: "Cliente 45", name: "EXITO COUNTRY", type: "directo" },
-      { id: "Cliente 46", name: "ÉXITO FLORESTA", type: "directo" },
-      { id: "Cliente 47", name: "ÉXITO FONTANAR", type: "directo" },
-      { id: "Cliente 48", name: "EXITO GRAN ESTACION", type: "directo" },
-      { id: "Cliente 49", name: "ÉXITO NIZA", type: "directo" },
-      { id: "Cliente 50", name: "EXITO NORTE", type: "directo" },
-      { id: "Cliente 51", name: "ÉXITO PLAZA SALITRE", type: "directo" },
-      { id: "Cliente 52", name: "ÉXITO UNICENTRO", type: "directo" },
-      { id: "Cliente 53", name: "JUMBO CHIA SABANA", type: "directo" },
-      { id: "Cliente 54", name: "JUMBO SANTA ANA", type: "directo" },
-      { id: "Cliente 55", name: "OLIMPICA", type: "directo" },
-      { id: "Cliente 56", name: "PLATAFORMA CENCOSUD", type: "directo" },
-      { id: "Cliente 57", name: "PLATAFORMA SIBERIA", type: "directo" }
-    ];
-
-    const searchInput = document.getElementById('searchCliente');
-    const dropdown = document.getElementById('clienteDropdown');
-    const hiddenInput = document.getElementById('clienteValue');
-
-    // Función para renderizar y clasificar los datos de la lista flotante
-    function renderList(filterText = '') {
-      dropdown.innerHTML = '';
-      const searchLog = filterText.toLowerCase();
-
-      // Filtrar el array global según lo escrito en tiempo real
-      const filtered = clientesData.filter(c => c.name.toLowerCase().includes(searchLog));
-
-      if (filtered.length === 0) {
-        dropdown.innerHTML = '<div class="no-results">No se encontraron resultados</div>';
-        return;
+    // ============================================================
+    // DATOS: jerarquía Cliente -> Tienda -> Sucursal -> [ {dependencia, tipo} ]
+    // Tomado de la tabla de rutas. Los 2 registros marcados como
+    // "(Pendiente)" dentro de CENCOSUD TIENDAS quedan como espacios
+    // libres para completar luego (correlativos 02 y 04, ya que solo
+    // se conocen 01. JUMBO CHIA y 03. JUMBO SANTA ANA).
+    // ============================================================
+    const dataClientes = {
+      "ALKOSTO SA": {
+        "ALKOSTO": {
+          "COLOMBIANA DE COMERCIO S.A.": [
+            { dep: "ALKOSTO", tipo: "URBANO" }
+          ]
+        }
+      },
+      "CENCOSUD SA": {
+        "CENCOSUD PLATAFORMA BOGOTA": {
+          "CENCOSUD COLOMBIA SA": [
+            { dep: "CENCOSUD PLATAFORMA BOGOTA", tipo: "URBANO" }
+          ]
+        },
+        "CENCOSUD PLATAFORMA COSTA": {
+          "CENCOSUD-COLOMBIA SA": [
+            { dep: "CENCOSUD PLATAFORMA COSTA", tipo: "URBANO" }
+          ]
+        },
+        "CENCOSUD TIENDAS": {
+          "CENCOSUD COLOMBIA SA CHIA": [
+            { dep: "01. JUMBO CHIA", tipo: "URBANO" }
+          ],
+          "CENCOSUD COLOMBIA SA SANTA ANA": [
+            { dep: "03. JUMBO SANTA ANA", tipo: "URBANO" }
+          ],
+          "(Pendiente 02)": [
+            { dep: "02. (Pendiente)", tipo: "URBANO" }
+          ],
+          "(Pendiente 04)": [
+            { dep: "04. (Pendiente)", tipo: "URBANO" }
+          ]
+        }
+      },
+      "D1 SAS": {
+        "D1 ANTIOQUIA": {
+          "D1 S A S - GIRARDOTA": [{ dep: "D1 S A S - GIRARDOTA", tipo: "VIAJERO" }],
+          "D1 S A S - GUARNE": [{ dep: "D1 S A S - GUARNE", tipo: "VIAJERO" }],
+          "D1 S A S - LA ESTRELLA": [{ dep: "D1 S A S - LA ESTRELLA", tipo: "VIAJERO" }]
+        },
+        "D1 APARTADO": {
+          "D1 S A S - CD URABA - APARTADO": [{ dep: "D1 S A S - CD URABA - APARTADO", tipo: "VIAJERO" }]
+        },
+        "D1 BARRANQUILLA": {
+          "D1 S A S - CD BARRANQUILLA": [{ dep: "D1 S A S - CD BARRANQUILLA", tipo: "VIAJERO" }]
+        },
+        "D1 CALI": {
+          "D1 S A S - CD CALI": [{ dep: "D1 S A S - CD CALI", tipo: "VIAJERO" }]
+        },
+        "D1 CUNDINAMARCA": {
+          "D1 S A S - FUNZA": [
+            { dep: "D1 FUNZA - K1", tipo: "URBANO" },
+            { dep: "D1 FUNZA - K2", tipo: "URBANO" }
+          ],
+          "D1 S A S - SIBATE": [{ dep: "D1 S A S - SIBATE", tipo: "URBANO" }],
+          "D1 S A S - TOCANCIPA": [{ dep: "D1 S A S - TOCANCIPA", tipo: "URBANO" }]
+        },
+        "D1 EJE CAFETERO": {
+          "D1 S A S - CD EJE CAFETERO": [{ dep: "D1 S A S - CD EJE CAFETERO", tipo: "VIAJERO" }]
+        },
+        "D1 IBAGUE": {
+          "D1 S A S - CD IBAGUE": [{ dep: "D1 S A S - CD IBAGUE", tipo: "VIAJERO" }]
+        },
+        "D1 MONTERIA": {
+          "D1 S A S - CD CERETE": [{ dep: "D1 S A S - CD CERETE", tipo: "VIAJERO" }]
+        },
+        "D1 TUNJA": {
+          "D1 S A S - CD TUNJA": [{ dep: "D1 S A S - CD TUNJA", tipo: "VIAJERO" }]
+        },
+        "D1 VALLEDUPAR": {
+          "D1 S A S - CD VALLEDUPAR": [{ dep: "D1 S A S - CD VALLEDUPAR", tipo: "VIAJERO" }]
+        }
+      },
+      "ÉXITO SA": {
+        "EXITO BARRANQUILLA": {
+          "ALMACENES EXITO SA BARRANQUILLA": [{ dep: "EXITO BARRANQUILLA", tipo: "VIAJERO" }]
+        },
+        "EXITO BOGOTA CROSS DOCKING": {
+          "ALMACENES EXITO SA - CEDI PARQUE SIBERIA": [{ dep: "EXITO BOGOTA CROSS DOCKING", tipo: "URBANO" }]
+        },
+        "EXITO BOGOTA PLATAFORMA": {
+          "ALMACENES EXITO SA CEDI PARQUE SIBERIA": [{ dep: "CEDI PARQUE SIBERIA", tipo: "URBANO" }]
+        },
+        "EXITO CALI": {
+          "ALMACENES EXITO SA CEDI CALIMA": [{ dep: "EXITO CALI", tipo: "VIAJERO" }]
+        },
+        "EXITO MEDELLIN": {
+          "ALMACENES EXITO SA CEDI ENVIGADO": [{ dep: "EXITO MEDELLIN", tipo: "VIAJERO" }]
+        },
+        "EXITO TIENDAS CARULLA": {
+          "ALMACENES EXITO CARULLA CASTILLA BOGOTA": [{ dep: "CARULLA CASTILLA BOGOTA", tipo: "URBANO" }],
+          "ALMACENES EXITO SA - CARULLA ALHAMBRA": [{ dep: "CARULLA ALHAMBRA", tipo: "URBANO" }],
+          "ALMACENES EXITO SA CARULLA CALLE 102": [{ dep: "CARULLA CALLE 102", tipo: "URBANO" }],
+          "ALMACENES EXITO SA CARULLA CALLE 140": [{ dep: "CARULLA CALLE 140", tipo: "URBANO" }],
+          "ALMACENES EXITO SA CARULLA CALLE 63": [{ dep: "CARULLA CALLE 63", tipo: "URBANO" }],
+          "ALMACENES EXITO SA CARULLA CEDRO BOLIVAR": [{ dep: "CARULLA CEDRO BOLIVAR", tipo: "URBANO" }],
+          "ALMACENES EXITO SA CARULLA CENTRO CHIA": [{ dep: "CARULLA CENTRO CHIA", tipo: "URBANO" }],
+          "ALMACENES EXITO SA CARULLA COUNTRY": [{ dep: "CARULLA COUNTRY", tipo: "URBANO" }],
+          "ALMACENES EXITO SA CARULLA EL RETIRO": [{ dep: "CARULLA EL RETIRO", tipo: "URBANO" }],
+          "ALMACENES EXITO SA CARULLA GALERIAS": [{ dep: "CARULLA GALERIAS", tipo: "URBANO" }],
+          "ALMACENES EXITO SA CARULLA MAX": [{ dep: "CARULLA MAX", tipo: "URBANO" }],
+          "ALMACENES EXITO SA CARULLA NIZA": [{ dep: "CARULLA NIZA", tipo: "URBANO" }],
+          "ALMACENES EXITO SA CARULLA PEPE SIERRA": [{ dep: "CARULLA PEPE SIERRA", tipo: "URBANO" }],
+          "ALMACENES EXITO SA CARULLA PLAZA CLARO": [{ dep: "CARULLA PLAZA CLARO", tipo: "URBANO" }],
+          "ALMACENES EXITO SA CARULLA QUINTA CAMACH": [{ dep: "CARULLA QUINTA CAMACH", tipo: "URBANO" }],
+          "ALMACENES EXITO SA CARULLA RINCON COLINA": [{ dep: "CARULLA RINCON COLINA", tipo: "URBANO" }],
+          "ALMACENES EXITO SA CARULLA ROSALES": [{ dep: "CARULLA ROSALES", tipo: "URBANO" }],
+          "ALMACENES EXITO SA CARULLA SANTA BARBARA": [{ dep: "CARULLA SANTA BARBARA", tipo: "URBANO" }]
+        },
+        "EXITO TIENDAS EXITO": {
+          "ALMACENES EXITO SA EXITO CALLE 80": [{ dep: "EXITO CALLE 80", tipo: "URBANO" }],
+          "ALMACENES EXITO SA EXITO CHAPINERO": [{ dep: "EXITO CHAPINERO", tipo: "URBANO" }],
+          "ALMACENES EXITO SA EXITO COLINA": [{ dep: "EXITO COLINA", tipo: "URBANO" }],
+          "ALMACENES EXITO SA EXITO COUNTRY": [{ dep: "EXITO COUNTRY", tipo: "URBANO" }],
+          "ALMACENES EXITO SA EXITO FLORESTA": [{ dep: "EXITO FLORESTA", tipo: "URBANO" }],
+          "ALMACENES EXITO SA EXITO FONTANAR CHIA": [{ dep: "EXITO FONTANAR CHIA", tipo: "URBANO" }],
+          "ALMACENES EXITO SA EXITO FONTIBON": [{ dep: "EXITO FONTIBON", tipo: "URBANO" }],
+          "ALMACENES EXITO SA EXITO GRAN ESTACION": [{ dep: "EXITO GRAN ESTACION", tipo: "URBANO" }],
+          "ALMACENES EXITO SA EXITO NIZA": [{ dep: "EXITO NIZA", tipo: "URBANO" }],
+          "ALMACENES EXITO SA EXITO NORTE": [{ dep: "EXITO NORTE", tipo: "URBANO" }],
+          "ALMACENES EXITO SA EXITO PLAZA SALITRE": [{ dep: "EXITO PLAZA SALITRE", tipo: "URBANO" }],
+          "ALMACENES EXITO SA EXITO UNICENTRO": [{ dep: "EXITO UNICENTRO", tipo: "URBANO" }]
+        }
+      },
+      "JERONIMO MARTINS SAS": {
+        "ARA BARRANQUILLA": { "JERONIMO MARTINS COLOMBIA SAS - B/QUILLA": [{ dep: "ARA BARRANQUILLA", tipo: "VIAJERO" }] },
+        "ARA CARTAGENA": { "JERONIMO MARTINS COLOMBIA SAS -CARTAGENA": [{ dep: "ARA CARTAGENA", tipo: "VIAJERO" }] },
+        "ARA COTA": { "JERONIMO MARTINS COLOMBIA SAS - COTA": [{ dep: "ARA COTA", tipo: "VIAJERO" }] },
+        "ARA GACHANCIPA": { "JERONIMO MARTINS COLOMBIA SAS-GACHANCIPA": [{ dep: "ARA GACHANCIPA", tipo: "VIAJERO" }] },
+        "ARA MONTERIA": { "JERONIMO MARTINS COLOMBIA SAS - MONTERIA": [{ dep: "ARA MONTERIA", tipo: "VIAJERO" }] },
+        "ARA PEREIRA": { "JERONIMO MARTINS COLOMBIA SAS -PEREIRA": [{ dep: "ARA PEREIRA", tipo: "VIAJERO" }] },
+        "ARA VALLEDUPAR": { "JERONIMO MARTINS COLOMBIA SAS - VALLEDUP": [{ dep: "ARA VALLEDUPAR", tipo: "VIAJERO" }] }
+      },
+      "OLIMPICA SA": {
+        "OLIMPICA BARRANQUILLA": { "SUPERTIENDAS Y DROGUERIAS OLIMPICA - BAQ": [{ dep: "OLIMPICA BARRANQUILLA", tipo: "VIAJERO" }] },
+        "OLIMPICA BOGOTA": { "SUPERTIENDAS Y DROGUERIAS OLIMPICA SA": [{ dep: "OLIMPICA BOGOTA", tipo: "URBANO" }] }
       }
+    };
 
-      const viajeros = filtered.filter(c => c.type === 'viajero');
-      const directos = filtered.filter(c => c.type === 'directo');
+    // Placas disponibles, separadas por tipo de viaje.
+    const placasPorTipo = {
+      URBANO: ["WCX-460", "WFH-623", "FSW-016", "GZZ-181", "GZZ-182", "JUY-343", "KNM-116", "JVK-792", "NHR-633", "NUX-576", "PRZ-066", "QJY-099", "QJY-850"],
+      VIAJERO: ["LUN-428", "LUN-429", "NHR-632", "NOW-031", "NOW-033", "NUX-577", "NUX-579", "NUX-580", "PRZ-064", "PRZ-065", "PRZ-067", "QJZ-765", "QJZ-764", "QTZ-898", "QTZ-899"]
+    };
 
-      // --- INSERCIÓN GRUPO VIAJEROS ---
-      if (viajeros.length > 0) {
-        dropdown.appendChild(createHeader('VIAJERO'));
+    // Estado de la selección en curso
+    const state = { cliente: null, tienda: null, sucursal: null };
 
-        let subHeaderAgregado = false;
+    // ============================================================
+    // Componente genérico de "buscador con lista flotante"
+    // ============================================================
+    function setupSearchable(cfg) {
+      const input = document.getElementById(cfg.inputId);
+      const hidden = document.getElementById(cfg.hiddenId);
+      const dropdown = document.getElementById(cfg.dropdownId);
+      const group = document.getElementById(cfg.groupId);
 
-        viajeros.forEach((cliente) => {
-          const numeroCliente = parseInt(cliente.id.replace('Cliente ', ''));
-
-          // Si pasamos del Cliente 15, inyectamos el separador intermedio
-          if (numeroCliente >= 16 && !subHeaderAgregado) {
-            dropdown.appendChild(createHeader('VIAJEROS (MÁS PLACAS)'));
-            subHeaderAgregado = true;
-          }
-
-          dropdown.appendChild(createOptionRow(cliente));
+      function render(filterText) {
+        const options = cfg.getOptions() || [];
+        dropdown.innerHTML = '';
+        if (options.length === 0) {
+          dropdown.innerHTML = '<div class="no-results">No hay opciones disponibles</div>';
+          return;
+        }
+        const f = (filterText || '').toLowerCase();
+        const filtered = options.filter(o => o.toLowerCase().includes(f));
+        if (filtered.length === 0) {
+          dropdown.innerHTML = '<div class="no-results">No se encontraron resultados</div>';
+          return;
+        }
+        filtered.sort((a, b) => a.localeCompare(b)).forEach(opt => {
+          const row = document.createElement('div');
+          row.className = 'dropdown-item';
+          row.innerText = opt;
+          row.addEventListener('click', () => {
+            input.value = opt;
+            hidden.value = opt;
+            dropdown.style.display = 'none';
+            input.setCustomValidity('');
+            if (cfg.onSelect) cfg.onSelect(opt);
+          });
+          dropdown.appendChild(row);
         });
       }
 
-      // --- INSERCIÓN GRUPO DIRECTOS ---
-      if (directos.length > 0) {
-        dropdown.appendChild(createHeader('DIRECTOS'));
-        directos.forEach(cliente => {
-          dropdown.appendChild(createOptionRow(cliente));
-        });
-      }
-    }
-
-    function createHeader(text) {
-      const header = document.createElement('div');
-      header.className = 'dropdown-header';
-      header.innerText = text;
-      return header;
-    }
-
-    function createOptionRow(cliente) {
-      const row = document.createElement('div');
-      row.className = 'dropdown-item';
-      row.innerText = cliente.name;
-      
-      row.addEventListener('click', () => {
-        searchInput.value = cliente.name;   // Muestra el nombre visible al usuario
-        hiddenInput.value = cliente.id;     // Escribe el ID en el input oculto (Cliente X)
-        dropdown.style.display = 'none';    // Cierra el panel flotante
-        searchInput.setCustomValidity("");  // Limpia errores de validación si existían
+      input.addEventListener('focus', () => {
+        if (input.disabled) return;
+        render(input.value);
+        dropdown.style.display = 'block';
       });
-      return row;
+
+      input.addEventListener('input', () => {
+        hidden.value = '';
+        input.setCustomValidity('Debes seleccionar una opción válida de la lista.');
+        render(input.value);
+        dropdown.style.display = 'block';
+        if (cfg.onClear) cfg.onClear();
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#' + cfg.groupId)) {
+          dropdown.style.display = 'none';
+          if (!hidden.value) input.value = '';
+        }
+      });
+
+      return {
+        setEnabled(enabled, placeholderText) {
+          input.disabled = !enabled;
+          if (placeholderText) input.placeholder = placeholderText;
+          if (!enabled) {
+            input.value = '';
+            hidden.value = '';
+          }
+        },
+        clearOnly() {
+          input.value = '';
+          hidden.value = '';
+        },
+        setValue(val) {
+          input.value = val;
+          hidden.value = val;
+        }
+      };
     }
 
-    // Eventos de control sobre el buscador
-    searchInput.addEventListener('focus', () => {
-      renderList(searchInput.value);
-      dropdown.style.display = 'block';
+    const tipoInput = document.getElementById('valueTipo');
+
+    const placaCtrl = setupSearchable({
+      inputId: 'searchPlaca', hiddenId: 'valuePlaca', dropdownId: 'dropdownPlaca', groupId: 'grupoPlaca',
+      getOptions: () => {
+        const tipo = tipoInput.value;
+        return (tipo && placasPorTipo[tipo]) ? placasPorTipo[tipo].slice() : [];
+      }
     });
 
-    searchInput.addEventListener('input', (e) => {
-      renderList(e.target.value);
-      // Forzar que el usuario seleccione una opción válida de la lista obligatoriamente
-      hiddenInput.value = "";
-      searchInput.setCustomValidity("Debes seleccionar un cliente válido de la lista.");
+    const dependenciaCtrl = setupSearchable({
+      inputId: 'searchDependencia', hiddenId: 'valueDependencia', dropdownId: 'dropdownDependencia', groupId: 'grupoDependencia',
+      getOptions: () => {
+        if (!(state.cliente && state.tienda && state.sucursal)) return [];
+        return dataClientes[state.cliente][state.tienda][state.sucursal].map(d => d.dep);
+      },
+      onSelect: (val) => {
+        const deps = dataClientes[state.cliente][state.tienda][state.sucursal];
+        const found = deps.find(d => d.dep === val);
+        tipoInput.value = found ? found.tipo : '';
+        placaCtrl.clearOnly();
+        placaCtrl.setEnabled(true, 'Busque una placa...');
+      },
+      onClear: () => {
+        tipoInput.value = '';
+        placaCtrl.setEnabled(false, 'Seleccione primero cliente/tienda/sucursal/dependencia...');
+      }
     });
 
-    // Cerrar el dropdown si se hace clic fuera del contenedor
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.cliente-group')) {
-        dropdown.style.display = 'none';
-        // Si no seleccionó un cliente de la lista válida, vaciamos el buscador
-        if (!hiddenInput.value) {
-          searchInput.value = "";
+    const sucursalCtrl = setupSearchable({
+      inputId: 'searchSucursal', hiddenId: 'valueSucursal', dropdownId: 'dropdownSucursal', groupId: 'grupoSucursal',
+      getOptions: () => {
+        if (!(state.cliente && state.tienda)) return [];
+        return Object.keys(dataClientes[state.cliente][state.tienda]);
+      },
+      onSelect: (val) => {
+        state.sucursal = val;
+        dependenciaCtrl.clearOnly();
+        tipoInput.value = '';
+        placaCtrl.setEnabled(false, 'Seleccione primero cliente/tienda/sucursal/dependencia...');
+
+        const deps = dataClientes[state.cliente][state.tienda][val];
+        if (deps.length === 1) {
+          // Única dependencia posible: se autocompleta para agilizar el registro
+          dependenciaCtrl.setValue(deps[0].dep);
+          dependenciaCtrl.setEnabled(true);
+          tipoInput.value = deps[0].tipo;
+          placaCtrl.clearOnly();
+          placaCtrl.setEnabled(true, 'Busque una placa...');
+        } else {
+          dependenciaCtrl.setEnabled(true, 'Seleccione una dependencia...');
+        }
+      },
+      onClear: () => {
+        state.sucursal = null;
+        dependenciaCtrl.setEnabled(false, 'Seleccione primero una sucursal...');
+        tipoInput.value = '';
+        placaCtrl.setEnabled(false, 'Seleccione primero cliente/tienda/sucursal/dependencia...');
+      }
+    });
+
+    const tiendaCtrl = setupSearchable({
+      inputId: 'searchTienda', hiddenId: 'valueTienda', dropdownId: 'dropdownTienda', groupId: 'grupoTienda',
+      getOptions: () => state.cliente ? Object.keys(dataClientes[state.cliente]) : [],
+      onSelect: (val) => {
+        state.tienda = val;
+        state.sucursal = null;
+        sucursalCtrl.clearOnly();
+        sucursalCtrl.setEnabled(true, 'Seleccione una sucursal...');
+        dependenciaCtrl.setEnabled(false, 'Seleccione primero una sucursal...');
+        tipoInput.value = '';
+        placaCtrl.setEnabled(false, 'Seleccione primero cliente/tienda/sucursal/dependencia...');
+      },
+      onClear: () => {
+        state.tienda = null;
+        state.sucursal = null;
+        sucursalCtrl.setEnabled(false, 'Seleccione primero una tienda...');
+        dependenciaCtrl.setEnabled(false, 'Seleccione primero una sucursal...');
+        tipoInput.value = '';
+        placaCtrl.setEnabled(false, 'Seleccione primero cliente/tienda/sucursal/dependencia...');
+      }
+    });
+
+    const clienteCtrl = setupSearchable({
+      inputId: 'searchCliente', hiddenId: 'valueCliente', dropdownId: 'dropdownCliente', groupId: 'grupoCliente',
+      getOptions: () => Object.keys(dataClientes),
+      onSelect: (val) => {
+        state.cliente = val;
+        state.tienda = null;
+        state.sucursal = null;
+        tiendaCtrl.clearOnly();
+        tiendaCtrl.setEnabled(true, 'Seleccione una tienda...');
+        sucursalCtrl.setEnabled(false, 'Seleccione primero una tienda...');
+        dependenciaCtrl.setEnabled(false, 'Seleccione primero una sucursal...');
+        tipoInput.value = '';
+        placaCtrl.setEnabled(false, 'Seleccione primero cliente/tienda/sucursal/dependencia...');
+      },
+      onClear: () => {
+        state.cliente = null;
+        state.tienda = null;
+        state.sucursal = null;
+        tiendaCtrl.setEnabled(false, 'Seleccione primero un cliente...');
+        sucursalCtrl.setEnabled(false, 'Seleccione primero una tienda...');
+        dependenciaCtrl.setEnabled(false, 'Seleccione primero una sucursal...');
+        tipoInput.value = '';
+        placaCtrl.setEnabled(false, 'Seleccione primero cliente/tienda/sucursal/dependencia...');
+      }
+    });
+
+    // ============================================================
+    // Envío del formulario
+    // ============================================================
+    document.getElementById("registroForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const camposObligatorios = [
+        { hidden: 'valueCliente', input: 'searchCliente', msg: 'Debes seleccionar un cliente válido de la lista.' },
+        { hidden: 'valueTienda', input: 'searchTienda', msg: 'Debes seleccionar una tienda válida de la lista.' },
+        { hidden: 'valueSucursal', input: 'searchSucursal', msg: 'Debes seleccionar una sucursal válida de la lista.' },
+        { hidden: 'valueDependencia', input: 'searchDependencia', msg: 'Debes seleccionar una dependencia válida de la lista.' },
+        { hidden: 'valuePlaca', input: 'searchPlaca', msg: 'Debes seleccionar una placa válida de la lista.' }
+      ];
+
+      for (const campo of camposObligatorios) {
+        const hiddenEl = document.getElementById(campo.hidden);
+        if (!hiddenEl.value) {
+          alert(campo.msg);
+          document.getElementById(campo.input).focus();
+          return;
         }
       }
-    });
 
-    // Envío del formulario corregido hacia tu Web App de Google Apps Script
-    document.getElementById("registroForm").addEventListener("submit", async function(e) {
-      e.preventDefault();
-      
-      // Validación preventiva: verificar si efectivamente hay un cliente asignado en el campo oculto
-      if (!hiddenInput.value) {
-        alert("Debes seleccionar un cliente válido de la lista flotante.");
-        searchInput.focus();
-        return;
-      }
-      
       if (!this.checkValidity()) {
         alert("Por favor completa todos los campos correctamente.");
         return;
       }
-      
+
       const formData = new FormData(this);
       const data = Object.fromEntries(formData.entries());
-
-      // --- PASO CLAVE CORREGIDO ---
-      // Forzamos de forma explícita que la propiedad 'cliente' lleve el nombre de texto seleccionado
-      data.cliente = searchInput.value;
 
       const ahora = new Date();
       data.fecha_envio = ahora.toLocaleDateString();
@@ -422,7 +670,7 @@
       btnSubmit.innerText = "Guardando...";
 
       try {
-        await fetch("https://script.google.com/macros/s/AKfycbzTDLu2EQ8rhapSPf2ZgV3Gs8IxsjMj7EXTmrCgU6mQOoAm8nra6oHBZZTFZis3rCwc/exec", {
+        await fetch("https://script.google.com/macros/s/AKfycbz54I5mNN-iJacYWL9FRMqo9Ep422xj9hsiDc4765gdO6Ci6Tzs2nVkC-pjki0R8FmB/exec", {
           method: "POST",
           mode: "no-cors",
           body: JSON.stringify(data)
@@ -430,7 +678,14 @@
 
         alert("Registro guardado en Google Sheets con éxito.");
         this.reset();
-        hiddenInput.value = ""; // Resetea el control del input oculto
+
+        // Restaurar cascada al estado inicial
+        state.cliente = null; state.tienda = null; state.sucursal = null;
+        tiendaCtrl.setEnabled(false, 'Seleccione primero un cliente...');
+        sucursalCtrl.setEnabled(false, 'Seleccione primero una tienda...');
+        dependenciaCtrl.setEnabled(false, 'Seleccione primero una sucursal...');
+        tipoInput.value = '';
+        placaCtrl.setEnabled(false, 'Seleccione primero cliente/tienda/sucursal/dependencia...');
       } catch (error) {
         alert("Ocurrió un error al guardar. Intenta nuevamente.");
       } finally {
