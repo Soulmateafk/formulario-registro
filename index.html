@@ -368,16 +368,27 @@
 
     <div class="form-group">
       <label>Producto de devolución:</label>
-      <input type="text" name="producto_devolucion" placeholder="Producto unificado" required>
-      <small>Por ahora es texto libre (lista pendiente).</small>
+      <input type="text" name="producto_devolucion" required>
+      <small>Por ahora es texto libre.</small>
     </div>
 
-    <div class="form-group searchable-group" id="grupoCodigoBarras">
+    <div class="form-group searchable-group" id="grupoProductoUnificado">
+      <label>Producto unificado:</label>
+      <input type="text" id="searchProductoUnificado" placeholder="Busque un producto..." autocomplete="off" required>
+      <div id="dropdownProductoUnificado" class="custom-dropdown"></div>
+      <input type="hidden" name="producto_unificado" id="valueProductoUnificado" required>
+    </div>
+
+    <div class="form-group searchable-group" id="grupoArticulo" style="display:none;">
+      <label>Artículo y/o servicio:</label>
+      <input type="text" id="searchArticulo" placeholder="Seleccione primero un producto unificado..." autocomplete="off" required disabled>
+      <div id="dropdownArticulo" class="custom-dropdown"></div>
+      <input type="hidden" name="articulo_servicio" id="valueArticulo" required>
+    </div>
+
+    <div class="form-group full-width">
       <label>Código de barras:</label>
-      <input type="text" id="searchCodigoBarras" placeholder="Escriba o seleccione un código..." autocomplete="off">
-      <div id="dropdownCodigoBarras" class="custom-dropdown"></div>
-      <input type="hidden" name="codigo_barras" id="valueCodigoBarras">
-      <small>Lista pendiente de cargar.</small>
+      <input type="text" name="codigo_barras" id="valueCodigoBarras" placeholder="Se completa automáticamente" readonly>
     </div>
 
     <div class="form-group">
@@ -558,11 +569,279 @@
       VIAJERO: ["LUN-428", "LUN-429", "NHR-632", "NOW-031", "NOW-033", "NUX-577", "NUX-579", "NUX-580", "PRZ-064", "PRZ-065", "PRZ-067", "QJZ-765", "QJZ-764", "QTZ-898", "QTZ-899"]
     };
 
-    // Lista pendiente: se llena cuando el usuario mande los datos.
-    const codigosBarras = [];
+    // Jerarquía Producto unificado -> [ {articulo, codigo} ] para el buscador de productos.
+    const dataProductos = {
+      "ACELGA": [
+        { articulo: "ACELGA CUISINE & CO KOSHER x 500g", codigo: "7703616395043" },
+        { articulo: "ACELGA CUISINE & CO x 500g", codigo: "7703616395050" },
+        { articulo: "ACELGA KILO", codigo: "100" },
+        { articulo: "ACELGA KOSHER  x 500 gr", codigo: "7707315811187" },
+        { articulo: "ACELGA KOSHER TAEQ", codigo: "3276489" },
+        { articulo: "ACELGA x 200 gr", codigo: "7262" },
+        { articulo: "ACELGA x 500gr", codigo: "20318666" },
+        { articulo: "ACELGA x 500gr", codigo: "909685" }
+      ],
+      "APIO": [
+        { articulo: "APIO CUISINE & CO KOSHER X 700G", codigo: "7703616395067" },
+        { articulo: "APIO CUISINE & CO X 500G", codigo: "7703616395098" },
+        { articulo: "APIO KILO", codigo: "1006" },
+        { articulo: "APIO KILO", codigo: "108" },
+        { articulo: "APIO PQT X 700 G", codigo: "45260" },
+        { articulo: "APIO UNIDAD", codigo: "20318628" },
+        { articulo: "APIO UNIDAD E", codigo: "20692711" },
+        { articulo: "APIO UNIDAD KOSHER TAEQ", codigo: "3276491" },
+        { articulo: "APIO UNIDAD x 600 gr", codigo: "12007387" },
+        { articulo: "APIO UNIDAD x 700gr E", codigo: "909673" }
+      ],
+      "APIO TALLOS": [
+        { articulo: "APIO CUISINE & CO TALLOS KOSHER X 300G", codigo: "7703616395081" },
+        { articulo: "APIO CUISINE & CO TALLOS X 300G", codigo: "7703616395074" },
+        { articulo: "APIO TALLOS", codigo: "371112" },
+        { articulo: "APIO TALLOS", codigo: "7707315810197" },
+        { articulo: "APIO TALLOS KOSHER", codigo: "7707315811286" },
+        { articulo: "APIO TALLOS KOSHER TAEQ", codigo: "3276490" },
+        { articulo: "APIO TALLOS PET 300 GR LA GIRALDA KOSHER", codigo: "14653" },
+        { articulo: "APIO TALLOS VINIPEL KOSHER x 400gr", codigo: "7707315810012" },
+        { articulo: "APIO VINIPEL 400 GR LA GIRALDA KOSHER", codigo: "15265" }
+      ],
+      "BROCOLI": [
+        { articulo: "BROCOLI", codigo: "45264" },
+        { articulo: "BROCOLI", codigo: "633" },
+        { articulo: "BROCOLI CUISINE &CO X 500G", codigo: "7703616395104" },
+        { articulo: "BROCOLI E", codigo: "1703029" },
+        { articulo: "BROCOLI KILO", codigo: "118" },
+        { articulo: "BROCOLI KILO", codigo: "1278" },
+        { articulo: "BROCOLI KILO", codigo: "147" },
+        { articulo: "BROCOLI KILO", codigo: "5470" },
+        { articulo: "BROCOLI KILO J", codigo: "4886" },
+        { articulo: "BROCOLI KILO M", codigo: "4909" },
+        { articulo: "BROCOLI KILO VINIPELADO", codigo: "282504" },
+        { articulo: "BROCOLI UNIDAD 450gr", codigo: "167864" },
+        { articulo: "BROCOLI UNIDAD V", codigo: "12007388" },
+        { articulo: "BROCOLI VINIPELADO", codigo: "7707315810074" }
+      ],
+      "BROCOLI TALLOS": [
+        { articulo: "BROCOLI CUISINE & CO TALLOS KOSHER X 200", codigo: "7703616395128" },
+        { articulo: "BROCOLI CUISINE & CO TALLOS X 200G", codigo: "7703616395111" },
+        { articulo: "BROCOLI TALLOS", codigo: "713636" },
+        { articulo: "BROCOLI TALLOS", codigo: "7707315810029" },
+        { articulo: "BROCOLI TALLOS KOSHER", codigo: "7707315811231" },
+        { articulo: "BROCOLI TALLOS KOSHER TAEQ", codigo: "3276492" },
+        { articulo: "BROCOLI TALLOS PET 200 GR LA GIRALDA KOS", codigo: "14651" },
+        { articulo: "TALLOS BROCOLI Y COLIFLOR x 200g", codigo: "20692803" }
+      ],
+      "CILANTRO": [
+        { articulo: "CILANTRO 100gr", codigo: "894373" },
+        { articulo: "CILANTRO CUISINE & CO KOSHER X100G", codigo: "7703616395135" },
+        { articulo: "CILANTRO CUISINE & CO X 100G", codigo: "7703616395142" },
+        { articulo: "CILANTRO KILO", codigo: "132" },
+        { articulo: "CILANTRO KOSHER x 100 gr", codigo: "7707315811194" },
+        { articulo: "CILANTRO MANOJO 100 G", codigo: "45270" },
+        { articulo: "CILANTRO UND X 100 GR", codigo: "12007450" },
+        { articulo: "CILANTRO x 100gr", codigo: "20641191" },
+        { articulo: "CILANTRO x 100gr KOSHER TAEQ", codigo: "3276493" },
+        { articulo: "CILANTRO x100g E", codigo: "1703791" }
+      ],
+      "COGOLLOS": [
+        { articulo: "COGOLLITO", codigo: "20580124" },
+        { articulo: "COGOLLITO EUROPEO", codigo: "880931" },
+        { articulo: "COGOLLITO LA GIRALDA BANDEJA X 300 GR", codigo: "13526" },
+        { articulo: "COGOLLO BANDEJA 250 GR", codigo: "18223" },
+        { articulo: "COGOLLO DE LECHUGA KOSHER TAEQ", codigo: "3276494" },
+        { articulo: "COGOLLO HIDROPONICO 250gr C&C", codigo: "7707315811064" },
+        { articulo: "COGOLLOS PET 250 GR LA GIRALDA KOSHER", codigo: "14654" },
+        { articulo: "COGOLLOS x 2 U 120g KOSHER", codigo: "1651989" },
+        { articulo: "HOJAS DE COGOLLOS KOSHER", codigo: "1822599" },
+        { articulo: "HOJAS DE COGOLLOS KOSHER", codigo: "7709135154840" }
+      ],
+      "COLIFLOR": [
+        { articulo: "COLIFLOR", codigo: "45272" },
+        { articulo: "COLIFLOR CUISINE &CO X 550G", codigo: "7703616395159" },
+        { articulo: "COLIFLOR E", codigo: "1703026" },
+        { articulo: "COLIFLOR KILO", codigo: "1184" },
+        { articulo: "COLIFLOR KILO", codigo: "140" },
+        { articulo: "COLIFLOR KILO", codigo: "314" },
+        { articulo: "COLIFLOR KILO", codigo: "5463" },
+        { articulo: "COLIFLOR KILO J", codigo: "4893" },
+        { articulo: "COLIFLOR KILO M", codigo: "4916" },
+        { articulo: "COLIFLOR KILO VINIPELADO", codigo: "283821" },
+        { articulo: "COLIFLOR UNIDAD 600gr", codigo: "923325" },
+        { articulo: "COLIFLOR VINIPEL", codigo: "7707315810180" }
+      ],
+      "COLIFLOR TALLOS": [
+        { articulo: "COLIFLOR CUISINE & CO TALLOS KOSHER X 20", codigo: "7703616395173" },
+        { articulo: "COLIFLOR CUISINE & CO TALLOS X 200G", codigo: "7703616395166" },
+        { articulo: "COLIFLOR TALLOS", codigo: "713829" },
+        { articulo: "COLIFLOR TALLOS KOSHER", codigo: "7707315811248" },
+        { articulo: "COLIFLOR TALLOS KOSHER TAEQ", codigo: "3276495" },
+        { articulo: "COLIFLOR TALLOS PET 200 GR LA GIRALDA K", codigo: "14652" }
+      ],
+      "ENSALADAS": [
+        { articulo: "ENSALAD GOLD SEMILLAS GIRASOL LA GIRALDA", codigo: "15270" },
+        { articulo: "ENSALADA CAMPO GOURMET 150 G", codigo: "3784825" },
+        { articulo: "ENSALADA CHEF CUISINE & CO  KOSHER X 180", codigo: "7703616395180" },
+        { articulo: "ENSALADA CHEF KOSHER MAKAND X 180G", codigo: "7708935571857" },
+        { articulo: "ENSALADA DEL CHEF 180 GR LA GIRALDA KOSH", codigo: "15264" },
+        { articulo: "ENSALADA DEL CHEF KOSHER", codigo: "1740950" },
+        { articulo: "ENSALADA DELUXE ALMENDRAS 180 G", codigo: "3309520" },
+        { articulo: "ENSALADA DELUXE MAIZ TOSTADO 180 G", codigo: "3309523" },
+        { articulo: "ENSALADA DELUXE SEMILLAS DE GIRASOL 180G", codigo: "3309521" },
+        { articulo: "ENSALADA GOLD DE ALMENDRAS LA GIRALDA", codigo: "15268" },
+        { articulo: "ENSALADA GOLD MAIZ TOSTADO LA GIRALDA", codigo: "15266" },
+        { articulo: "ENSALADA MIX X 150G", codigo: "18480" },
+        { articulo: "ENSALADA VITAL GREEN GOURMET X 180 gr", codigo: "7707315811385" },
+        { articulo: "ENSALADA VITAL GREEN KOSHER CUISINE & CO", codigo: "7703616395197" },
+        { articulo: "ENSALADA VITAL GREEN KOSHER CUISINE & CO", codigo: "7703616395203" },
+        { articulo: "ENSALADA VITAL GREEN KOSHER TAEQ", codigo: "3276496" },
+        { articulo: "ENSALADA VITAL GREEN LA GIRALDA 180G", codigo: "15261" },
+        { articulo: "ENSALADA VITAL GREEN x 180g", codigo: "7707315811026" },
+        { articulo: "ENSALADA VITAL GREEN x 60 gr", codigo: "7707315811071" }
+      ],
+      "ESPINACA": [
+        { articulo: "ESPINACA BOLSA 200 GR", codigo: "12006666" },
+        { articulo: "ESPINACA BOLSA X 200 G", codigo: "45273" },
+        { articulo: "ESPINACA CUISINE & CO KOSHER X 300G", codigo: "7703616395210" },
+        { articulo: "ESPINACA CUISINE & CO X 500G", codigo: "7703616395234" },
+        { articulo: "ESPINACA KILO", codigo: "146" },
+        { articulo: "ESPINACA KOSHER x 300 gr", codigo: "7707315811255" },
+        { articulo: "ESPINACA UNIDAD KOSHER TAEQ", codigo: "3276498" },
+        { articulo: "ESPINACA UNIDAD x 300gr E", codigo: "909698" },
+        { articulo: "ESPINACA UNIDAD x 500gr", codigo: "20318642" }
+      ],
+      "ESPINACA BABY": [
+        { articulo: "ESPINACA BABY LA GIRALDA BDJA 250G", codigo: "13512" },
+        { articulo: "ESPINACA BABY x 200gr K", codigo: "7707315811262" },
+        { articulo: "ESPINACA TIERNA KOSHER TAEQ", codigo: "3276497" },
+        { articulo: "ESPINACA VIVA 150 GR LA GIRALDA KOSHER", codigo: "15273" },
+        { articulo: "ESPINACA VIVA BOLSA 200 GR LA GIRALDA KO", codigo: "15271" },
+        { articulo: "ESPINACA VIVA CUISINE & CO  KOSHER X 200", codigo: "7703616395227" }
+      ],
+      "FRESA": [
+        { articulo: "FRESA 250 Gr", codigo: "1850" }
+      ],
+      "HORTALIZAS VIVAS DE LA HUERTA": [
+        { articulo: "HORTALIZAS VIVAS DE LA HUERTA C", codigo: "1825751-C" },
+        { articulo: "HORTALIZAS VIVAS DE LA HUERTA L", codigo: "1825751-L" },
+        { articulo: "HORTALIZAS VIVAS DE LA HUERTA M", codigo: "1825751-M" },
+        { articulo: "HORTALIZAS VIVAS DE LA HUERTA MS", codigo: "1825751-MS" },
+        { articulo: "HORTALIZAS VIVAS DE LA HUERTA R", codigo: "1825751-R" },
+        { articulo: "HORTALIZAS VIVAS DE LA HUERTA RM", codigo: "1825751-RM" },
+        { articulo: "HORTALIZAS VIVAS DE LA HUERTA T", codigo: "1825751-T" },
+        { articulo: "HORTALIZAS VIVAS DE LA HUERTA V", codigo: "1825751-V" },
+        { articulo: "HORTALIZAS VIVAS DE LA HUERTA VS", codigo: "1825751-VS" }
+      ],
+      "LECHUGA HIDROPONICA MORADA": [
+        { articulo: "LECHUGA MORADA A GNEL", codigo: "82126" },
+        { articulo: "LECHUGA MORADA CRESPA", codigo: "10937" },
+        { articulo: "LECHUGA MORADA CRESPA H", codigo: "262245" },
+        { articulo: "LECHUGA MORADA CRESPA O x 180g", codigo: "10885" },
+        { articulo: "LECHUGA MORADA H C&C", codigo: "7707315810067" },
+        { articulo: "LECHUGA MORADA H KOSHER", codigo: "7707315811309" },
+        { articulo: "LECHUGA MORADA H KOSHER TAEQ", codigo: "3276589" },
+        { articulo: "LECHUGA MORADA LA GIRALDA 180G", codigo: "14483" },
+        { articulo: "LECHUGA MORADA PET KOSHER", codigo: "634659" },
+        { articulo: "LECHUGA MORADA PET KOSHER", codigo: "7707315811156" },
+        { articulo: "MORADA CRESPA PET 130 GR LA GIRALDA KOSH", codigo: "14648" }
+      ],
+      "LECHUGA HIDROPONICA MORADA SALANOVA": [
+        { articulo: "LECHUGA MORADA PET SALANOVA KOSHER X120g", codigo: "7708935571895" },
+        { articulo: "LECHUGA MORADA SALANOVA KOSHER TAEQ", codigo: "3276590" }
+      ],
+      "LECHUGA HIDROPONICA ROMANA": [
+        { articulo: "LECHUGA ROMANA", codigo: "52105" },
+        { articulo: "LECHUGA ROMANA A GRANEL", codigo: "82260" },
+        { articulo: "LECHUGA ROMANA H", codigo: "262248" },
+        { articulo: "LECHUGA ROMANA H C&C", codigo: "7707315810166" },
+        { articulo: "LECHUGA ROMANA H KOSHER", codigo: "7707315811316" },
+        { articulo: "LECHUGA ROMANA H KOSHER TAEQ", codigo: "3276591" },
+        { articulo: "LECHUGA ROMANA H Ox 140g", codigo: "10887" },
+        { articulo: "LECHUGA ROMANA LA GIRALDA 140GR", codigo: "14484" },
+        { articulo: "LECHUGA ROMANA O 140g", codigo: "10894" }
+      ],
+      "LECHUGA HIDROPONICA TROPICAL": [
+        { articulo: "LECHUGA TROPICAL", codigo: "39634" },
+        { articulo: "LECHUGA TROPICAL H", codigo: "338649" },
+        { articulo: "LECHUGA TROPICAL H C&C", codigo: "7707315810159" },
+        { articulo: "LECHUGA TROPICAL H KOSHER", codigo: "7707315811323" },
+        { articulo: "LECHUGA TROPICAL H KOSHER TAEQ", codigo: "3276593" },
+        { articulo: "LECHUGA TROPICAL H O x 180g", codigo: "10888" },
+        { articulo: "LECHUGA TROPICAL LA GIRALDA", codigo: "15365" },
+        { articulo: "LECHUGA TROPICAL PET KOSHER", codigo: "7707315811149" },
+        { articulo: "TROPICAL PET 130 GR LA GIRALDA KOSHER", codigo: "14647" }
+      ],
+      "LECHUGA HIDROPONICA VERDE": [
+        { articulo: "LECHUGA HIDROPONICA PET KOSHER", codigo: "1753343" },
+        { articulo: "LECHUGA VERDE CRESPA A GNEL", codigo: "82127" },
+        { articulo: "LECHUGA VERDE CRESPA E", codigo: "1703788" },
+        { articulo: "LECHUGA VERDE CRESPA H", codigo: "262223" },
+        { articulo: "LECHUGA VERDE CRESPA H C&C", codigo: "7703616274690" },
+        { articulo: "LECHUGA VERDE CRESPA H JBO", codigo: "7707315810104" },
+        { articulo: "LECHUGA VERDE CRESPA H S", codigo: "471077" },
+        { articulo: "LECHUGA VERDE CRESPA HIDROPONICA", codigo: "20494704" },
+        { articulo: "LECHUGA VERDE CRESPA LA GIRALDA 180G", codigo: "14482" },
+        { articulo: "LECHUGA VERDE CRESPA O  x 180g", codigo: "10883" },
+        { articulo: "LECHUGA VERDE CRESPA PET KOSHER", codigo: "7707315811132" },
+        { articulo: "LECHUGA VERDE CRESPA X 180 GR", codigo: "12005805" },
+        { articulo: "LECHUGA VERDE CRESPA X 200 G", codigo: "45277" },
+        { articulo: "LECHUGA VERDE H KOSHER", codigo: "7707315811293" },
+        { articulo: "LECHUGA VERDE H KOSHER TAEQ", codigo: "3276594" },
+        { articulo: "LECHUGA VERDE PET KOSHER", codigo: "473052" },
+        { articulo: "VERDE CRESPA PET 130 GR LA GIRALDA KOSHE", codigo: "14646" }
+      ],
+      "LECHUGA HIDROPONICA VERDE LISA": [
+        { articulo: "LECHUGA VERDE LISA H C&C", codigo: "7707315811088" },
+        { articulo: "LECHUGA VERDE LISA H KOSHER", codigo: "7707315811330" },
+        { articulo: "LECHUGA VERDE LISA HIDROPONICA", codigo: "262242" },
+        { articulo: "LECHUGA VERDE LISA KOSHER TAEQ", codigo: "3276595" },
+        { articulo: "LECHUGA VERDE LISA PET KOSHER", codigo: "247519" },
+        { articulo: "LECHUGA VERDE LISA PET KOSHER", codigo: "7707315811163" },
+        { articulo: "VERDE LISA PET 130 GR LA GIRALDA KOSHER", codigo: "14649" }
+      ],
+      "LECHUGA HIDROPONICA VERDE SALANOVA": [
+        { articulo: "LECHUGA VERDE PET SALANOVA KOSHER X120g", codigo: "7708935571819" },
+        { articulo: "LECHUGA VERDE SALANOVA KOSHER TAEQ", codigo: "3276596" }
+      ],
+      "PEREJIL CRESPO": [
+        { articulo: "PEREJIL CRESPO 150 GR LA GIRALDA KOSHER", codigo: "14636" },
+        { articulo: "PEREJIL CRESPO CUISINE & CO X 100G", codigo: "7703616395258" },
+        { articulo: "PEREJIL CRESPO KOSHER TAEQ", codigo: "3276597" },
+        { articulo: "PEREJIL CRESPO KOSHER x 100 gr", codigo: "7707315811217" },
+        { articulo: "PEREJIL CRESPO x 100gr", codigo: "20641207" },
+        { articulo: "PEREJIL CRESPO x 100gr", codigo: "909697" },
+        { articulo: "PEREJIL x PQT 100 G C", codigo: "45295" }
+      ],
+      "PEREJIL LISO": [
+        { articulo: "PEREJIL LISO CUISINE & CO KOSHER X 100G", codigo: "7703616395265" },
+        { articulo: "PEREJIL LISO KOSHER TAEQ", codigo: "3276598" },
+        { articulo: "PEREJIL LISO KOSHER x 100 gr", codigo: "7707315811200" },
+        { articulo: "PEREJIL LISO x 100gr", codigo: "909696" },
+        { articulo: "PEREJIL x PQT 100 G L", codigo: "45295" }
+      ],
+      "RUGULA": [
+        { articulo: "RUGULA BANDEJA X 150 G", codigo: "19896" },
+        { articulo: "RUGULA LA GIRALDA BDJA 250G", codigo: "13524" },
+        { articulo: "RUGULA x 150g", codigo: "443006" }
+      ],
+      "TOMATE CHERRY": [
+        { articulo: "TOMATE CHERRY GRANEL", codigo: "1243" },
+        { articulo: "TOMATE CHERRY PET 500gr", codigo: "20672461" },
+        { articulo: "TOMATE CHERRY x 1000g", codigo: "20588755" },
+        { articulo: "TOMATE CHERRY X 250 GR", codigo: "12003716" },
+        { articulo: "TOMATE CHERRY x 250gr", codigo: "20687816" },
+        { articulo: "TOMATE CHERRY x 500gr", codigo: "319631" }
+      ],
+      "TOMATE SAN MARZANO": [
+        { articulo: "TOMATE SAN MARZANO X 1000g", codigo: "7709231443428" },
+        { articulo: "TOMATE SAN MARZANO X 1000g", codigo: "90217" }
+      ],
+      "TOMATE UVA": [
+        { articulo: "TOMATE CHERRY UVA PET X 500GR", codigo: "20672478" },
+        { articulo: "TOMATE UVALINA X 500G", codigo: "764230" }
+      ]
+    };
 
     // Estado de la selección en curso
-    const state = { cliente: null, tienda: null, sucursal: null };
+    const state = { cliente: null, tienda: null, sucursal: null, productoUnificado: null };
 
     // ============================================================
     // Componente genérico de "buscador con lista flotante"
@@ -690,9 +969,45 @@
       ]
     });
 
-    const codigoBarrasCtrl = setupSearchable({
-      inputId: 'searchCodigoBarras', hiddenId: 'valueCodigoBarras', dropdownId: 'dropdownCodigoBarras', groupId: 'grupoCodigoBarras',
-      getOptions: () => codigosBarras.slice()
+    const codigoBarrasInput = document.getElementById('valueCodigoBarras');
+
+    const articuloCtrl = setupSearchable({
+      inputId: 'searchArticulo', hiddenId: 'valueArticulo', dropdownId: 'dropdownArticulo', groupId: 'grupoArticulo',
+      getOptions: () => {
+        if (!state.productoUnificado) return [];
+        return dataProductos[state.productoUnificado].map(it => it.articulo + ' | ' + it.codigo);
+      },
+      onSelect: (opt) => {
+        // La opción viene como "ARTICULO | CODIGO" para que se puedan distinguir
+        // artículos con el mismo nombre pero código distinto. Aquí separamos
+        // ambas partes: el campo visible se queda solo con el nombre del artículo,
+        // y el código de barras se autocompleta en su propio campo (solo lectura).
+        const idx = opt.lastIndexOf(' | ');
+        const articulo = idx >= 0 ? opt.slice(0, idx) : opt;
+        const codigo = idx >= 0 ? opt.slice(idx + 3) : '';
+        document.getElementById('searchArticulo').value = articulo;
+        document.getElementById('valueArticulo').value = articulo;
+        codigoBarrasInput.value = codigo;
+      },
+      onClear: () => {
+        codigoBarrasInput.value = '';
+      }
+    });
+
+    const productoUnificadoCtrl = setupSearchable({
+      inputId: 'searchProductoUnificado', hiddenId: 'valueProductoUnificado', dropdownId: 'dropdownProductoUnificado', groupId: 'grupoProductoUnificado',
+      getOptions: () => Object.keys(dataProductos),
+      onSelect: (val) => {
+        state.productoUnificado = val;
+        articuloCtrl.clearOnly();
+        articuloCtrl.setEnabled(true, 'Seleccione un artículo o servicio...');
+        codigoBarrasInput.value = '';
+      },
+      onClear: () => {
+        state.productoUnificado = null;
+        articuloCtrl.setEnabled(false, 'Seleccione primero un producto unificado...');
+        codigoBarrasInput.value = '';
+      }
     });
 
     const dependenciaCtrl = setupSearchable({
